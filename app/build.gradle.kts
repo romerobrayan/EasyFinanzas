@@ -8,7 +8,7 @@ plugins {
 
 android {
     namespace = "dev.romerobrayan.tinto"
-    compileSdk = 36
+    compileSdk = 37
 
     defaultConfig {
         applicationId = "dev.romerobrayan.tinto"
