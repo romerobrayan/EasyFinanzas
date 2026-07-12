@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Window background before Compose draws (matches VtBackground). -->
+    <color name="vt_background">#17090E</color>
+    <color name="ic_launcher_background">#17090E</color>
+</resources>

@@ -1,0 +1,85 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">Tinto</string>
+
+    <!-- Bottom navigation -->
+    <string name="nav_home">Inicio</string>
+    <string name="nav_movements">Movimientos</string>
+    <string name="nav_reminders">Recordatorios</string>
+    <string name="nav_profile">Perfil</string>
+    <string name="nav_add">Agregar movimiento</string>
+
+    <!-- Period selector -->
+    <string name="period_day">Día</string>
+    <string name="period_week">Semana</string>
+    <string name="period_month">Mes</string>
+    <string name="period_year">Año</string>
+
+    <!-- Dashboard -->
+    <string name="dashboard_expenses_of">Gastos de %1$s</string>
+    <string name="dashboard_comparison_down">%1$d%% menos vs %2$s</string>
+    <string name="dashboard_comparison_up">%1$d%% más vs %2$s</string>
+    <string name="dashboard_comparison_equal">Igual que %1$s</string>
+    <string name="dashboard_movements">Movimientos</string>
+    <string name="dashboard_see_all">Ver todos</string>
+    <string name="dashboard_empty_period">Sin movimientos en este período</string>
+
+    <!-- Month / statement sheet -->
+    <string name="month_sheet_title">Selecciona un extracto</string>
+    <string name="cd_month_selector">Seleccionar mes</string>
+
+    <!-- Movements -->
+    <string name="movements_title">Movimientos</string>
+    <string name="filter_all">Todos</string>
+    <string name="movements_empty">Sin movimientos para este filtro</string>
+    <string name="method_cash">Efectivo</string>
+    <string name="card_mask">•••• %1$s</string>
+
+    <!-- Add transaction -->
+    <string name="add_title">Agregar movimiento</string>
+    <string name="add_type_expense">Gasto</string>
+    <string name="add_type_income">Ingreso</string>
+    <string name="add_method_label">Método de pago</string>
+    <string name="add_method_card">Tarjeta</string>
+    <string name="add_method_cash">Efectivo</string>
+    <string name="add_amount_placeholder">$0</string>
+    <string name="add_last4_label">Últimos 4 dígitos de la tarjeta</string>
+    <string name="add_category_label">Categoría</string>
+    <string name="add_date_label">Fecha</string>
+    <string name="add_merchant_label">Descripción (opcional)</string>
+    <string name="add_save_expense">Agregar gasto</string>
+    <string name="add_save_income">Agregar ingreso</string>
+    <string name="add_error_amount">Ingresa un monto mayor a cero</string>
+    <string name="add_error_category">Selecciona una categoría</string>
+    <string name="add_error_last4">Ingresa los 4 dígitos de la tarjeta</string>
+    <string name="add_today">Hoy</string>
+    <string name="cd_close">Cerrar</string>
+    <string name="action_ok">Aceptar</string>
+    <string name="action_cancel">Cancelar</string>
+
+    <!-- Reminders -->
+    <string name="reminders_title">Recordatorios</string>
+    <string name="reminders_upcoming">Próximos</string>
+    <string name="reminders_paid">Pagados</string>
+    <string name="reminder_due">Vence el %1$s</string>
+    <string name="reminder_paid_badge">Pagado</string>
+    <string name="recurrence_none">Única vez</string>
+    <string name="recurrence_weekly">Semanal</string>
+    <string name="recurrence_monthly">Mensual</string>
+    <string name="recurrence_yearly">Anual</string>
+
+    <!-- Profile -->
+    <string name="profile_title">Perfil</string>
+    <string name="profile_cards_section">Tarjetas</string>
+    <string name="profile_data_section">Datos</string>
+    <string name="profile_export">Exportar datos</string>
+    <string name="profile_export_hint">Exporta tus movimientos en JSON versionado</string>
+    <string name="profile_permissions_section">Captura automática</string>
+    <string name="profile_perm_notifications">Notificaciones bancarias</string>
+    <string name="profile_perm_sms">Mensajes SMS</string>
+    <string name="profile_perm_gmail">Correos de Gmail</string>
+    <string name="profile_perm_soon">Próximamente</string>
+
+    <!-- Shared -->
+    <string name="recurring_badge">recurrente</string>
+</resources>
