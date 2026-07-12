@@ -12,7 +12,7 @@ import kotlinx.datetime.toJavaLocalDate
  */
 object Dates {
 
-    private val locale = Locale("es", "CO")
+    private val locale = Locale.forLanguageTag("es-CO")
 
     /** "Julio 2026" */
     fun monthYearLabel(date: LocalDate): String =

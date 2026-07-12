@@ -16,7 +16,7 @@ object MoneyFormat {
             .chunked(GROUP_SIZE)
             .joinToString(".")
             .reversed()
-        return "$$grouped"
+        return "$" + grouped
     }
 
     private const val CENTS_PER_PESO = 100L
