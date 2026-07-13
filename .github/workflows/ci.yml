@@ -11,6 +11,9 @@ concurrency:
   group: ci-${{ github.ref }}
   cancel-in-progress: true
 
+permissions:
+  contents: write
+
 jobs:
   build:
     runs-on: ubuntu-latest
@@ -37,6 +40,24 @@ jobs:
         with:
           name: tinto-debug-apk
           path: app/build/outputs/apk/debug/*.apk
+
+      # Also publish the APK to an orphan branch so it is downloadable via
+      # plain git/raw URLs (Actions artifact downloads require a login).
+      - name: Publish debug APK to the ci-apk branch
+        if: success() && startsWith(github.ref_name, 'claude/')
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          workdir=$(mktemp -d)
+          cp app/build/outputs/apk/debug/app-debug.apk "$workdir/tinto-debug.apk"
+          cd "$workdir"
+          git init -q -b ci-apk
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add tinto-debug.apk
+          git commit -q -m "ci: debug APK from ${GITHUB_SHA}"
+          git push -f "https://x-access-token:${GH_TOKEN}@github.com/${GITHUB_REPOSITORY}.git" ci-apk
 
       - name: Upload reports
         if: failure()
