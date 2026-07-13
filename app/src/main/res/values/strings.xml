@@ -52,7 +52,6 @@
     <string name="add_error_amount">Ingresa un monto mayor a cero</string>
     <string name="add_error_category">Selecciona una categoría</string>
     <string name="add_error_last4">Ingresa los 4 dígitos de la tarjeta</string>
-    <string name="add_today">Hoy</string>
     <string name="cd_close">Cerrar</string>
     <string name="action_ok">Aceptar</string>
     <string name="action_cancel">Cancelar</string>
@@ -82,4 +81,7 @@
 
     <!-- Shared -->
     <string name="recurring_badge">recurrente</string>
+    <string name="date_today">Hoy</string>
+    <string name="date_yesterday">Ayer</string>
+    <string name="week_of">semana del %1$s</string>
 </resources>
