@@ -2,9 +2,14 @@
 
 The code side of the Firebase integration is **done**: Google sign-in, per-user
 Cloud Firestore persistence (with offline cache), Analytics and Crashlytics are
-all wired in. What the repo ships with is a **placeholder**
-`app/google-services.json`, so the app builds and runs in demo mode but cannot
-talk to your real Firebase project yet.
+all wired in.
+
+**Current status of `app/google-services.json`:** it carries the real project
+keys (so Analytics and Crashlytics already report), but its `oauth_client`
+entry is still the `REPLACE_ME` placeholder — the file was first downloaded
+before Google sign-in was enabled. Until steps 2 and 5 below are done and the
+re-downloaded file is committed, the Google button shows the "not configured"
+message and only demo mode works.
 
 Follow these one-time steps in the [Firebase console](https://console.firebase.google.com/u/0/project/tintoapp-romerodev/overview)
 (~10 minutes, everything below is on the free Spark plan).

@@ -1,26 +1,26 @@
 {
   "project_info": {
-    "project_number": "000000000000",
+    "project_number": "901298125707",
     "project_id": "tintoapp-romerodev",
     "storage_bucket": "tintoapp-romerodev.firebasestorage.app"
   },
   "client": [
     {
       "client_info": {
-        "mobilesdk_app_id": "1:000000000000:android:0000000000000000000000",
+        "mobilesdk_app_id": "1:901298125707:android:a0d1b70627dea17f288d8e",
         "android_client_info": {
           "package_name": "dev.romerobrayan.tinto"
         }
       },
       "oauth_client": [
         {
-          "client_id": "REPLACE_ME-000000000000.apps.googleusercontent.com",
+          "client_id": "REPLACE_ME-901298125707.apps.googleusercontent.com",
           "client_type": 3
         }
       ],
       "api_key": [
         {
-          "current_key": "AIzaSyREPLACE_ME_0000000000000000000000"
+          "current_key": "AIzaSyB6BSPX85XW0GlOPXktTl7xTlzT9HVtIb4"
         }
       ],
       "services": {
