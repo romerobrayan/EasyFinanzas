@@ -48,11 +48,13 @@ fun LoginScreen(
     val state by viewModel.uiState.collectAsStateWithLifecycle()
     val context = LocalContext.current
     val scope = rememberCoroutineScope()
+    // Read at composition time (Compose lint: resource queries through
+    // LocalContext.current don't refresh on configuration changes).
+    val webClientId = stringResource(R.string.default_web_client_id)
 
     LoginContent(
         state = state,
         onGoogleClick = {
-            val webClientId = context.getString(R.string.default_web_client_id)
             if (webClientId.startsWith("REPLACE")) {
                 // Placeholder google-services.json still in the build.
                 viewModel.onSignInFailed(R.string.login_error_not_configured)
