@@ -8,4 +8,8 @@ interface TransactionRepository {
     fun observeTransactions(): Flow<List<Transaction>>
 
     suspend fun addTransaction(transaction: Transaction)
+
+    suspend fun updateTransaction(transaction: Transaction)
+
+    suspend fun deleteTransaction(transactionId: String)
 }

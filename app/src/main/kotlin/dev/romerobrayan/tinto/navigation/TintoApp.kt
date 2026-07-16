@@ -54,10 +54,14 @@ fun TintoApp(onScreenView: (String) -> Unit = {}) {
         screenName?.let(onScreenView)
     }
 
+    val onEditMovement: (String) -> Unit = { transactionId ->
+        navController.navigate(AddTransactionRoute(transactionId))
+    }
+
     TintoScaffold(
         currentTab = currentTab,
         onTabSelected = navController::navigateToTab,
-        onAddClick = { navController.navigate(AddTransactionRoute) },
+        onAddClick = { navController.navigate(AddTransactionRoute()) },
     ) { padding ->
         NavHost(
             navController = navController,
@@ -65,10 +69,13 @@ fun TintoApp(onScreenView: (String) -> Unit = {}) {
             modifier = Modifier.padding(padding),
         ) {
             composable<DashboardRoute> {
-                DashboardScreen(onSeeAll = { navController.navigateToTab(TintoTab.MOVEMENTS) })
+                DashboardScreen(
+                    onSeeAll = { navController.navigateToTab(TintoTab.MOVEMENTS) },
+                    onEditMovement = onEditMovement,
+                )
             }
             composable<MovementsRoute> {
-                MovementsScreen()
+                MovementsScreen(onEditMovement = onEditMovement)
             }
             composable<AddTransactionRoute> {
                 AddTransactionScreen(onClose = { navController.popBackStack() })

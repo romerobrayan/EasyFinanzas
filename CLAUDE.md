@@ -18,9 +18,9 @@ Operating manual for Claude Code on this repository. Read `PROJECT_CONTEXT.md`, 
 - `app/google-services.json` in the repo may be the placeholder; real console setup steps live in `FIREBASE_SETUP.md`. `app/debug.keystore` is committed on purpose (shared debug signature for local + CI so the registered SHA-1 stays valid).
 - Firestore security rules: `firestore.rules` (per-user isolation).
 
-## Current sprint — Sprint 2: real-account CRUD
+## Previous sprint — Sprint 2: real-account CRUD (done)
 
-**The brief is `TASK_SPRINT_2_CRUD.md` — read it before writing code.** In short: movement detail + edit + delete, card management in Perfil, reminders create/edit/mark-paid with recurrence rollover. Same behavior in demo (in-memory) and signed-in (Firestore) modes. No capture, no export, no schema renames this sprint.
+Brief: `TASK_SPRINT_2_CRUD.md`. Delivered: movement detail bottom sheet (`core/designsystem/component/MovementDetailSheet.kt`) with edit (add-transaction screen in edit mode via `AddTransactionRoute(transactionId)`) and delete; card CRUD in Perfil (`feature/profile/CardFormSheet.kt`); reminders create/edit/delete/mark-paid (`feature/reminders/ReminderFormSheet.kt`) with the recurrence rollover as a pure function in `core/domain/usecase/ReminderRollover.kt` (unit-tested, month-end clamping pinned). All CRUD routes by session through the `Synced*`/`InMemory*` repositories — identical behavior demo vs signed-in; Firestore writes stay fire-and-forget. Shared form primitives extracted to `core/designsystem/component` (`TintoSelectorPill`, `TintoDatePickerDialog`, `TintoConfirmDialog`, `tintoTextFieldColors`).
 
 ## Previous sprint — Sprint 1: UI shell
 

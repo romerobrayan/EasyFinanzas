@@ -38,6 +38,7 @@ import dev.romerobrayan.tinto.R
 import dev.romerobrayan.tinto.core.designsystem.component.MoneyText
 import dev.romerobrayan.tinto.core.designsystem.component.MonthPickerSheet
 import dev.romerobrayan.tinto.core.designsystem.component.MonthSelector
+import dev.romerobrayan.tinto.core.designsystem.component.MovementDetailSheet
 import dev.romerobrayan.tinto.core.designsystem.component.PeriodSelector
 import dev.romerobrayan.tinto.core.designsystem.component.StatementRow
 import dev.romerobrayan.tinto.core.designsystem.component.TintoBarChart
@@ -49,6 +50,7 @@ import dev.romerobrayan.tinto.core.domain.model.Period
 @Composable
 fun DashboardScreen(
     onSeeAll: () -> Unit,
+    onEditMovement: (String) -> Unit,
     modifier: Modifier = Modifier,
     viewModel: DashboardViewModel = hiltViewModel(),
 ) {
@@ -59,6 +61,8 @@ fun DashboardScreen(
         onBarSelected = viewModel::onBarSelected,
         onMonthSelected = viewModel::onMonthSelected,
         onSeeAll = onSeeAll,
+        onEditMovement = onEditMovement,
+        onDeleteMovement = viewModel::onDeleteMovement,
         modifier = modifier,
     )
 }
@@ -70,11 +74,14 @@ private fun DashboardContent(
     onBarSelected: (Int) -> Unit,
     onMonthSelected: (String) -> Unit,
     onSeeAll: () -> Unit,
+    onEditMovement: (String) -> Unit,
+    onDeleteMovement: (String) -> Unit,
     modifier: Modifier = Modifier,
 ) {
     val type = LocalTintoTypography.current
     val tinto = LocalTintoColors.current
     var showMonthSheet by rememberSaveable { mutableStateOf(false) }
+    var selectedMovementId by rememberSaveable { mutableStateOf<String?>(null) }
 
     Column(
         modifier = modifier
@@ -148,7 +155,10 @@ private fun DashboardContent(
             }
         } else {
             state.preview.forEachIndexed { index, item ->
-                StatementRow(item = item)
+                StatementRow(
+                    item = item,
+                    onClick = { selectedMovementId = item.id },
+                )
                 if (index != state.preview.lastIndex) {
                     HorizontalDivider(thickness = 0.5.dp, color = MaterialTheme.colorScheme.outline)
                 }
@@ -166,6 +176,24 @@ private fun DashboardContent(
                 showMonthSheet = false
             },
             onDismiss = { showMonthSheet = false },
+        )
+    }
+
+    val selectedMovement = selectedMovementId?.let { id ->
+        state.preview.firstOrNull { it.id == id }
+    }
+    if (selectedMovement != null) {
+        MovementDetailSheet(
+            item = selectedMovement,
+            onEdit = {
+                selectedMovementId = null
+                onEditMovement(selectedMovement.id)
+            },
+            onDelete = {
+                selectedMovementId = null
+                onDeleteMovement(selectedMovement.id)
+            },
+            onDismiss = { selectedMovementId = null },
         )
     }
 }

@@ -1,5 +1,6 @@
 package dev.romerobrayan.tinto.core.data.firebase
 
+import dev.romerobrayan.tinto.core.domain.model.Card
 import dev.romerobrayan.tinto.core.domain.model.Money
 import dev.romerobrayan.tinto.core.domain.model.PaymentMethod
 import dev.romerobrayan.tinto.core.domain.model.Recurrence
@@ -74,6 +75,27 @@ class FirestoreMappersTest {
         assertNull(map["cardId"])
         assertNull(map["bank"])
         assertNull(map["merchant"])
+    }
+
+    @Test
+    fun `card encodes to primitive firestore fields`() {
+        val map = Card(
+            id = "card-1",
+            bank = "Bancolombia",
+            last4 = "3092",
+            label = "Débito",
+        ).toFirestoreMap()
+
+        assertEquals("Bancolombia", map["bank"])
+        assertEquals("3092", map["last4"])
+        assertEquals("Débito", map["label"])
+    }
+
+    @Test
+    fun `card without label keeps the field null`() {
+        val map = Card(id = "card-2", bank = "Nu", last4 = "2481", label = null).toFirestoreMap()
+
+        assertNull(map["label"])
     }
 
     @Test

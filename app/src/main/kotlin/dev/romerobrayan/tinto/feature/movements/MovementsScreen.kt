@@ -35,6 +35,7 @@ import dev.romerobrayan.tinto.R
 import dev.romerobrayan.tinto.core.common.Dates
 import dev.romerobrayan.tinto.core.designsystem.component.MonthPickerSheet
 import dev.romerobrayan.tinto.core.designsystem.component.MonthSelector
+import dev.romerobrayan.tinto.core.designsystem.component.MovementDetailSheet
 import dev.romerobrayan.tinto.core.designsystem.component.StatementRow
 import dev.romerobrayan.tinto.core.designsystem.theme.LocalTintoColors
 import dev.romerobrayan.tinto.core.designsystem.theme.LocalTintoTypography
@@ -42,6 +43,7 @@ import dev.romerobrayan.tinto.core.designsystem.theme.PillShape
 
 @Composable
 fun MovementsScreen(
+    onEditMovement: (String) -> Unit,
     modifier: Modifier = Modifier,
     viewModel: MovementsViewModel = hiltViewModel(),
 ) {
@@ -50,6 +52,8 @@ fun MovementsScreen(
         state = state,
         onFilterSelected = viewModel::onFilterSelected,
         onMonthSelected = viewModel::onMonthSelected,
+        onEditMovement = onEditMovement,
+        onDeleteMovement = viewModel::onDeleteMovement,
         modifier = modifier,
     )
 }
@@ -59,11 +63,14 @@ private fun MovementsContent(
     state: MovementsUiState,
     onFilterSelected: (MovementsFilter) -> Unit,
     onMonthSelected: (String) -> Unit,
+    onEditMovement: (String) -> Unit,
+    onDeleteMovement: (String) -> Unit,
     modifier: Modifier = Modifier,
 ) {
     val type = LocalTintoTypography.current
     val tinto = LocalTintoColors.current
     var showMonthSheet by rememberSaveable { mutableStateOf(false) }
+    var selectedMovementId by rememberSaveable { mutableStateOf<String?>(null) }
 
     Column(modifier = modifier.fillMaxSize()) {
         Column(Modifier.padding(horizontal = 18.dp)) {
@@ -130,7 +137,10 @@ private fun MovementsContent(
                     group.items.forEachIndexed { index, item ->
                         item(key = item.id) {
                             Column {
-                                StatementRow(item = item)
+                                StatementRow(
+                                    item = item,
+                                    onClick = { selectedMovementId = item.id },
+                                )
                                 if (index != group.items.lastIndex) {
                                     HorizontalDivider(
                                         thickness = 0.5.dp,
@@ -154,6 +164,24 @@ private fun MovementsContent(
                 showMonthSheet = false
             },
             onDismiss = { showMonthSheet = false },
+        )
+    }
+
+    val selectedMovement = selectedMovementId?.let { id ->
+        state.groups.asSequence().flatMap { it.items }.firstOrNull { it.id == id }
+    }
+    if (selectedMovement != null) {
+        MovementDetailSheet(
+            item = selectedMovement,
+            onEdit = {
+                selectedMovementId = null
+                onEditMovement(selectedMovement.id)
+            },
+            onDelete = {
+                selectedMovementId = null
+                onDeleteMovement(selectedMovement.id)
+            },
+            onDismiss = { selectedMovementId = null },
         )
     }
 }

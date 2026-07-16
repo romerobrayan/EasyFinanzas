@@ -1,5 +1,6 @@
 package dev.romerobrayan.tinto.core.designsystem.component
 
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -22,23 +23,27 @@ import dev.romerobrayan.tinto.core.common.MovementUi
 import dev.romerobrayan.tinto.core.designsystem.theme.LocalTintoTypography
 import dev.romerobrayan.tinto.core.designsystem.theme.TintoTheme
 import dev.romerobrayan.tinto.core.domain.model.Money
+import dev.romerobrayan.tinto.core.domain.model.TransactionSource
 import dev.romerobrayan.tinto.core.domain.model.TransactionType
 import kotlinx.datetime.LocalDate
 
 /**
  * One statement line: category tile, title/subtitle stack, right-aligned
  * signed amount. Rows are separated by hairlines at the list level — the row
- * itself stays flat.
+ * itself stays flat. With [onClick] the whole row is tappable (opens the
+ * movement detail sheet).
  */
 @Composable
 fun StatementRow(
     item: MovementUi,
     modifier: Modifier = Modifier,
+    onClick: (() -> Unit)? = null,
 ) {
     val type = LocalTintoTypography.current
     Row(
         modifier = modifier
             .fillMaxWidth()
+            .then(if (onClick != null) Modifier.clickable(onClick = onClick) else Modifier)
             .padding(vertical = 12.dp),
         verticalAlignment = Alignment.CenterVertically,
     ) {
@@ -99,6 +104,8 @@ private fun StatementRowPreview() {
                         type = TransactionType.EXPENSE,
                         isRecurring = false,
                         date = LocalDate(2026, 7, 10),
+                        merchant = "Mercado D1",
+                        source = TransactionSource.MANUAL,
                     ),
                 )
                 StatementRow(
@@ -114,6 +121,8 @@ private fun StatementRowPreview() {
                         type = TransactionType.EXPENSE,
                         isRecurring = true,
                         date = LocalDate(2026, 7, 9),
+                        merchant = "YouTube Premium",
+                        source = TransactionSource.MANUAL,
                     ),
                 )
             }

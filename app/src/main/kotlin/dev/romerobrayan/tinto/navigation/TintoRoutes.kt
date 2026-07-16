@@ -10,8 +10,9 @@ data object DashboardRoute
 @Serializable
 data object MovementsRoute
 
+/** [transactionId] null = add a new movement; non-null = edit that movement. */
 @Serializable
-data object AddTransactionRoute
+data class AddTransactionRoute(val transactionId: String? = null)
 
 @Serializable
 data object RemindersRoute

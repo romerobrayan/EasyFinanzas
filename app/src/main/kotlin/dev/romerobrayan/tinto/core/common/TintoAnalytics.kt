@@ -22,6 +22,24 @@ interface TintoAnalytics {
     /** Coarse shape of the movement only: EXPENSE/INCOME + CARD/CASH. */
     fun logAddTransaction(type: String, method: String)
 
+    /** Coarse shape of the movement only: EXPENSE/INCOME + CARD/CASH. */
+    fun logEditTransaction(type: String, method: String)
+
+    /** Coarse shape of the movement only: EXPENSE/INCOME + CARD/CASH. */
+    fun logDeleteTransaction(type: String, method: String)
+
+    /** No bank names or digits — the event alone. */
+    fun logAddCard()
+
+    /** No bank names or digits — the event alone. */
+    fun logDeleteCard()
+
+    /** [recurrence] is the coarse enum name only — never titles or amounts. */
+    fun logAddReminder(recurrence: String)
+
+    /** [recurrence] is the coarse enum name only — never titles or amounts. */
+    fun logReminderPaid(recurrence: String)
+
     /** Non-fatal error worth seeing in Crashlytics (e.g. a sync listener failure). */
     fun recordError(error: Throwable)
 }

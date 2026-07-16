@@ -22,6 +22,7 @@ import androidx.compose.material.icons.outlined.Email
 import androidx.compose.material.icons.outlined.FileDownload
 import androidx.compose.material.icons.outlined.NotificationsNone
 import androidx.compose.material.icons.outlined.Sms
+import androidx.compose.material.icons.rounded.Add
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
@@ -44,6 +45,7 @@ import dev.romerobrayan.tinto.core.designsystem.theme.LocalTintoColors
 import dev.romerobrayan.tinto.core.designsystem.theme.LocalTintoTypography
 import dev.romerobrayan.tinto.core.designsystem.theme.PillShape
 import dev.romerobrayan.tinto.core.designsystem.theme.TileShape
+import dev.romerobrayan.tinto.core.domain.model.Card
 
 @Composable
 fun ProfileScreen(
@@ -51,13 +53,33 @@ fun ProfileScreen(
     viewModel: ProfileViewModel = hiltViewModel(),
 ) {
     val state by viewModel.uiState.collectAsStateWithLifecycle()
-    ProfileContent(state = state, onSignOut = viewModel::onSignOut, modifier = modifier)
+    ProfileContent(
+        state = state,
+        onSignOut = viewModel::onSignOut,
+        onAddCardClick = viewModel::onAddCardClick,
+        onCardClick = viewModel::onCardClick,
+        modifier = modifier,
+    )
+
+    state.cardForm?.let { form ->
+        CardFormSheet(
+            form = form,
+            onBankChanged = viewModel::onCardBankChanged,
+            onLast4Changed = viewModel::onCardLast4Changed,
+            onLabelChanged = viewModel::onCardLabelChanged,
+            onSubmit = viewModel::onCardFormSubmit,
+            onDelete = viewModel::onCardDelete,
+            onDismiss = viewModel::onCardFormDismiss,
+        )
+    }
 }
 
 @Composable
 private fun ProfileContent(
     state: ProfileUiState,
     onSignOut: () -> Unit,
+    onAddCardClick: () -> Unit,
+    onCardClick: (Card) -> Unit,
     modifier: Modifier = Modifier,
 ) {
     val type = LocalTintoTypography.current
@@ -133,6 +155,7 @@ private fun ProfileContent(
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
+                    .clickable { onCardClick(card) }
                     .padding(vertical = 12.dp),
                 verticalAlignment = Alignment.CenterVertically,
             ) {
@@ -180,6 +203,30 @@ private fun ProfileContent(
             }
         }
 
+        Spacer(Modifier.height(if (state.cards.isEmpty()) 10.dp else 12.dp))
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .clip(ButtonShape)
+                .background(MaterialTheme.colorScheme.surfaceVariant)
+                .clickable(onClick = onAddCardClick)
+                .padding(14.dp),
+            verticalAlignment = Alignment.CenterVertically,
+        ) {
+            Icon(
+                imageVector = Icons.Rounded.Add,
+                contentDescription = null,
+                tint = tinto.gold,
+                modifier = Modifier.size(22.dp),
+            )
+            Spacer(Modifier.width(12.dp))
+            Text(
+                text = stringResource(R.string.profile_add_card),
+                style = type.body.copy(fontWeight = FontWeight.Medium),
+                color = MaterialTheme.colorScheme.onBackground,
+            )
+        }
+
         Spacer(Modifier.height(28.dp))
         Text(
             text = stringResource(R.string.profile_data_section),
@@ -193,7 +240,7 @@ private fun ProfileContent(
                 .clip(ButtonShape)
                 .background(MaterialTheme.colorScheme.surfaceVariant)
                 .clickable {
-                    // TODO(sprint-2): real JSON export via the Storage Access Framework.
+                    // TODO(sprint-3): real JSON export via the Storage Access Framework.
                 }
                 .padding(14.dp),
             verticalAlignment = Alignment.CenterVertically,

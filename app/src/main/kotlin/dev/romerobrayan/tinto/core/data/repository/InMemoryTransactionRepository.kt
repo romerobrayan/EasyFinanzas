@@ -25,4 +25,14 @@ class InMemoryTransactionRepository @Inject constructor() : TransactionRepositor
     override suspend fun addTransaction(transaction: Transaction) {
         transactions.update { it + transaction }
     }
+
+    override suspend fun updateTransaction(transaction: Transaction) {
+        transactions.update { list ->
+            list.map { if (it.id == transaction.id) transaction else it }
+        }
+    }
+
+    override suspend fun deleteTransaction(transactionId: String) {
+        transactions.update { list -> list.filterNot { it.id == transactionId } }
+    }
 }

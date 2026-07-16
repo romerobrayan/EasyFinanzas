@@ -43,16 +43,44 @@ class FirebaseTintoAnalytics @Inject constructor() : TintoAnalytics {
     }
 
     override fun logAddTransaction(type: String, method: String) {
+        logTransactionEvent("add_transaction", type, method)
+    }
+
+    override fun logEditTransaction(type: String, method: String) {
+        logTransactionEvent("edit_transaction", type, method)
+    }
+
+    override fun logDeleteTransaction(type: String, method: String) {
+        logTransactionEvent("delete_transaction", type, method)
+    }
+
+    override fun logAddCard() {
+        analytics.logEvent("add_card", null)
+    }
+
+    override fun logDeleteCard() {
+        analytics.logEvent("delete_card", null)
+    }
+
+    override fun logAddReminder(recurrence: String) {
+        analytics.logEvent("add_reminder", bundleOf("recurrence" to recurrence))
+    }
+
+    override fun logReminderPaid(recurrence: String) {
+        analytics.logEvent("reminder_paid", bundleOf("recurrence" to recurrence))
+    }
+
+    override fun recordError(error: Throwable) {
+        crashlytics.recordException(error)
+    }
+
+    private fun logTransactionEvent(event: String, type: String, method: String) {
         analytics.logEvent(
-            "add_transaction",
+            event,
             bundleOf(
                 "transaction_type" to type,
                 "payment_method" to method,
             ),
         )
-    }
-
-    override fun recordError(error: Throwable) {
-        crashlytics.recordException(error)
     }
 }

@@ -5,6 +5,7 @@ import androidx.lifecycle.viewModelScope
 import dagger.hilt.android.lifecycle.HiltViewModel
 import dev.romerobrayan.tinto.core.common.Dates
 import dev.romerobrayan.tinto.core.common.MockData
+import dev.romerobrayan.tinto.core.common.TintoAnalytics
 import dev.romerobrayan.tinto.core.common.toMovementUi
 import dev.romerobrayan.tinto.core.designsystem.component.ChartBarUi
 import dev.romerobrayan.tinto.core.designsystem.component.MonthOption
@@ -26,8 +27,10 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
+import kotlinx.coroutines.launch
 import kotlinx.datetime.Clock
 import kotlinx.datetime.DateTimeUnit
 import kotlinx.datetime.LocalDate
@@ -39,10 +42,11 @@ import kotlinx.datetime.todayIn
 
 @HiltViewModel
 class DashboardViewModel @Inject constructor(
-    transactionRepository: TransactionRepository,
+    private val transactionRepository: TransactionRepository,
     categoryRepository: CategoryRepository,
     cardRepository: CardRepository,
     private val aggregateSpend: AggregateSpendUseCase,
+    private val analytics: TintoAnalytics,
 ) : ViewModel() {
 
     private val timeZone = TimeZone.currentSystemDefault()
@@ -76,6 +80,15 @@ class DashboardViewModel @Inject constructor(
 
     fun onMonthSelected(monthKey: String) {
         selection.update { it.copy(monthKey = monthKey, bucketIndex = null) }
+    }
+
+    fun onDeleteMovement(transactionId: String) {
+        viewModelScope.launch {
+            val transaction = transactionRepository.observeTransactions().first()
+                .firstOrNull { it.id == transactionId } ?: return@launch
+            transactionRepository.deleteTransaction(transactionId)
+            analytics.logDeleteTransaction(transaction.type.name, transaction.method.name)
+        }
     }
 
     private fun buildState(

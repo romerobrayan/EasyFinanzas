@@ -25,7 +25,7 @@ object MockData {
 
     val timeZone: TimeZone = TimeZone.of("America/Bogota")
 
-    /** TODO(sprint-2+): replaced by real recurring-charge detection. */
+    /** TODO(sprint-3): replaced by real recurring-charge detection. */
     val recurringMerchants: Set<String> = setOf("Google One", "YouTube Premium")
 
     const val USER_NAME = "Brayan Romero"

@@ -26,17 +26,11 @@ import androidx.compose.material.icons.rounded.Close
 import androidx.compose.material.icons.rounded.Event
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
-import androidx.compose.material3.DatePicker
-import androidx.compose.material3.DatePickerDialog
-import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
 import androidx.compose.material3.TextField
-import androidx.compose.material3.TextFieldDefaults
-import androidx.compose.material3.rememberDatePickerState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -49,7 +43,6 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.SolidColor
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.TextRange
@@ -64,6 +57,9 @@ import dev.romerobrayan.tinto.R
 import dev.romerobrayan.tinto.core.common.Dates
 import dev.romerobrayan.tinto.core.common.MoneyFormat
 import dev.romerobrayan.tinto.core.designsystem.component.CategoryIcon
+import dev.romerobrayan.tinto.core.designsystem.component.TintoDatePickerDialog
+import dev.romerobrayan.tinto.core.designsystem.component.TintoSelectorPill
+import dev.romerobrayan.tinto.core.designsystem.component.tintoTextFieldColors
 import dev.romerobrayan.tinto.core.designsystem.theme.ButtonShape
 import dev.romerobrayan.tinto.core.designsystem.theme.LocalTintoColors
 import dev.romerobrayan.tinto.core.designsystem.theme.LocalTintoTypography
@@ -71,11 +67,7 @@ import dev.romerobrayan.tinto.core.designsystem.theme.PillShape
 import dev.romerobrayan.tinto.core.domain.model.Money
 import dev.romerobrayan.tinto.core.domain.model.PaymentMethod
 import dev.romerobrayan.tinto.core.domain.model.TransactionType
-import kotlinx.datetime.Instant
 import kotlinx.datetime.LocalDate
-import kotlinx.datetime.TimeZone
-import kotlinx.datetime.atStartOfDayIn
-import kotlinx.datetime.toLocalDateTime
 
 @Composable
 fun AddTransactionScreen(
@@ -133,7 +125,9 @@ private fun AddTransactionContent(
         Spacer(Modifier.height(8.dp))
         Row(verticalAlignment = Alignment.CenterVertically) {
             Text(
-                text = stringResource(R.string.add_title),
+                text = stringResource(
+                    if (state.isEditing) R.string.add_title_edit else R.string.add_title,
+                ),
                 style = type.screenTitle,
                 color = MaterialTheme.colorScheme.onBackground,
                 modifier = Modifier.weight(1f),
@@ -149,12 +143,12 @@ private fun AddTransactionContent(
 
         Spacer(Modifier.height(12.dp))
         Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
-            SelectorPill(
+            TintoSelectorPill(
                 label = stringResource(R.string.add_type_expense),
                 selected = state.type == TransactionType.EXPENSE,
                 onClick = { onTypeChanged(TransactionType.EXPENSE) },
             )
-            SelectorPill(
+            TintoSelectorPill(
                 label = stringResource(R.string.add_type_income),
                 selected = state.type == TransactionType.INCOME,
                 onClick = { onTypeChanged(TransactionType.INCOME) },
@@ -179,12 +173,12 @@ private fun AddTransactionContent(
         )
         Spacer(Modifier.height(8.dp))
         Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
-            SelectorPill(
+            TintoSelectorPill(
                 label = stringResource(R.string.add_method_cash),
                 selected = state.method == PaymentMethod.CASH,
                 onClick = { onMethodChanged(PaymentMethod.CASH) },
             )
-            SelectorPill(
+            TintoSelectorPill(
                 label = stringResource(R.string.add_method_card),
                 selected = state.method == PaymentMethod.CARD,
                 onClick = { onMethodChanged(PaymentMethod.CARD) },
@@ -195,7 +189,7 @@ private fun AddTransactionContent(
             Spacer(Modifier.height(12.dp))
             Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                 state.cards.forEach { card ->
-                    SelectorPill(
+                    TintoSelectorPill(
                         label = "${card.bank} ${stringResource(R.string.card_mask, card.last4)}",
                         selected = state.last4 == card.last4,
                         onClick = { onLast4Changed(card.last4) },
@@ -303,10 +297,10 @@ private fun AddTransactionContent(
         ) {
             Text(
                 text = stringResource(
-                    if (state.type == TransactionType.EXPENSE) {
-                        R.string.add_save_expense
-                    } else {
-                        R.string.add_save_income
+                    when {
+                        state.isEditing -> R.string.add_save_changes
+                        state.type == TransactionType.EXPENSE -> R.string.add_save_expense
+                        else -> R.string.add_save_income
                     },
                 ),
                 style = type.body.copy(fontWeight = FontWeight.Medium),
@@ -316,7 +310,7 @@ private fun AddTransactionContent(
     }
 
     if (showDatePicker) {
-        AddDatePickerDialog(
+        TintoDatePickerDialog(
             initialDate = state.date,
             onConfirm = { date ->
                 onDateChanged(date)
@@ -374,75 +368,6 @@ private fun AmountField(
     )
 }
 
-@OptIn(ExperimentalMaterial3Api::class)
-@Composable
-private fun AddDatePickerDialog(
-    initialDate: LocalDate,
-    onConfirm: (LocalDate) -> Unit,
-    onDismiss: () -> Unit,
-) {
-    val datePickerState = rememberDatePickerState(
-        initialSelectedDateMillis = initialDate
-            .atStartOfDayIn(TimeZone.UTC)
-            .toEpochMilliseconds(),
-    )
-    DatePickerDialog(
-        onDismissRequest = onDismiss,
-        confirmButton = {
-            TextButton(
-                onClick = {
-                    datePickerState.selectedDateMillis?.let { millis ->
-                        onConfirm(
-                            Instant.fromEpochMilliseconds(millis)
-                                .toLocalDateTime(TimeZone.UTC)
-                                .date,
-                        )
-                    } ?: onDismiss()
-                },
-            ) {
-                Text(stringResource(R.string.action_ok))
-            }
-        },
-        dismissButton = {
-            TextButton(onClick = onDismiss) {
-                Text(stringResource(R.string.action_cancel))
-            }
-        },
-    ) {
-        DatePicker(state = datePickerState)
-    }
-}
-
-@Composable
-private fun SelectorPill(
-    label: String,
-    selected: Boolean,
-    onClick: () -> Unit,
-) {
-    val tinto = LocalTintoColors.current
-    Box(
-        modifier = Modifier
-            .clip(PillShape)
-            .background(if (selected) tinto.gold else MaterialTheme.colorScheme.surfaceVariant)
-            .clickable(onClick = onClick)
-            .padding(horizontal = 14.dp, vertical = 7.dp),
-    ) {
-        Text(
-            text = label,
-            style = if (selected) {
-                LocalTintoTypography.current.body.copy(fontWeight = FontWeight.Medium)
-            } else {
-                LocalTintoTypography.current.body
-            },
-            color = if (selected) {
-                MaterialTheme.colorScheme.background
-            } else {
-                MaterialTheme.colorScheme.onSurfaceVariant
-            },
-        )
-    }
-}
-
 @Composable
 private fun CategoryChip(
     name: String,
@@ -489,18 +414,3 @@ private fun ErrorText(message: String, centered: Boolean = false) {
         modifier = if (centered) Modifier.fillMaxWidth() else Modifier,
     )
 }
-
-@Composable
-private fun tintoTextFieldColors() = TextFieldDefaults.colors(
-    focusedContainerColor = MaterialTheme.colorScheme.surfaceVariant,
-    unfocusedContainerColor = MaterialTheme.colorScheme.surfaceVariant,
-    errorContainerColor = MaterialTheme.colorScheme.surfaceVariant,
-    focusedIndicatorColor = Color.Transparent,
-    unfocusedIndicatorColor = Color.Transparent,
-    errorIndicatorColor = Color.Transparent,
-    cursorColor = LocalTintoColors.current.gold,
-    focusedTextColor = MaterialTheme.colorScheme.onBackground,
-    unfocusedTextColor = MaterialTheme.colorScheme.onBackground,
-    focusedLabelColor = LocalTintoColors.current.muted,
-    unfocusedLabelColor = LocalTintoColors.current.muted,
-)

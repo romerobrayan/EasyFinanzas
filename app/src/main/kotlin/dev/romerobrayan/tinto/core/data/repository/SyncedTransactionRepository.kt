@@ -59,4 +59,30 @@ class SyncedTransactionRepository @Inject constructor(
             else -> Unit
         }
     }
+
+    override suspend fun updateTransaction(transaction: Transaction) {
+        when (val session = auth.session.value) {
+            is UserSession.SignedIn ->
+                // Full-document set, fire-and-forget — same offline rationale
+                // as addTransaction.
+                userCollection(session.user.uid, "transactions")
+                    .document(transaction.id)
+                    .set(transaction.toFirestoreMap())
+
+            UserSession.Demo -> demo.updateTransaction(transaction)
+            else -> Unit
+        }
+    }
+
+    override suspend fun deleteTransaction(transactionId: String) {
+        when (val session = auth.session.value) {
+            is UserSession.SignedIn ->
+                userCollection(session.user.uid, "transactions")
+                    .document(transactionId)
+                    .delete()
+
+            UserSession.Demo -> demo.deleteTransaction(transactionId)
+            else -> Unit
+        }
+    }
 }

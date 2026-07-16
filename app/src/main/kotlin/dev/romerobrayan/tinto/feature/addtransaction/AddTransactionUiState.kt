@@ -10,6 +10,8 @@ import kotlinx.datetime.TimeZone
 import kotlinx.datetime.todayIn
 
 data class AddTransactionUiState(
+    /** True when editing an existing movement (title/CTA change accordingly). */
+    val isEditing: Boolean = false,
     /** Raw peso digits as typed; formatting happens in the amount field. */
     val amountDigits: String = "",
     val type: TransactionType = TransactionType.EXPENSE,

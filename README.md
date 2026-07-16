@@ -11,13 +11,19 @@ notifications and Gmail.
 UI language is Spanish (es-CO); amounts are Colombian pesos handled as
 integer minor units end to end.
 
-## Status — Sprint 1: UI shell ✅ · Sprint 1.5: Firebase ✅
+## Status — Sprint 1: UI shell ✅ · Sprint 1.5: Firebase ✅ · Sprint 2: CRUD ✅
 
 The complete visual shell plus the Firebase backbone: Google sign-in
 (Credential Manager), per-user Cloud Firestore persistence with offline
 cache, Analytics and Crashlytics. A demo mode keeps the app fully
 explorable with sample data before signing in. **One-time console setup
 is required — see [FIREBASE_SETUP.md](FIREBASE_SETUP.md).**
+
+Sprint 2 makes real accounts fully manageable day to day: movement detail
+with edit and delete, card management in Perfil, and payment reminders
+with create/edit/delete and a recurrence-aware "mark as paid" (one-off
+reminders complete; weekly/monthly/yearly ones reschedule). Everything
+behaves identically in demo mode and signed in.
 
 ## Stack
 
@@ -37,6 +43,7 @@ Architecture + MVVM, package by feature.
 | [FIREBASE_SETUP.md](FIREBASE_SETUP.md) | One-time Firebase console setup + troubleshooting |
 | [CLAUDE.md](CLAUDE.md) | Working agreements for AI-assisted development |
 | [TASK_SPRINT_1_UI_SHELL.md](TASK_SPRINT_1_UI_SHELL.md) | The Sprint 1 brief |
+| [TASK_SPRINT_2_CRUD.md](TASK_SPRINT_2_CRUD.md) | The Sprint 2 brief |
 
 ## Build
 

@@ -52,16 +52,46 @@
     <string name="add_error_amount">Ingresa un monto mayor a cero</string>
     <string name="add_error_category">Selecciona una categoría</string>
     <string name="add_error_last4">Ingresa los 4 dígitos de la tarjeta</string>
+    <string name="add_title_edit">Editar movimiento</string>
+    <string name="add_save_changes">Guardar cambios</string>
     <string name="cd_close">Cerrar</string>
     <string name="action_ok">Aceptar</string>
     <string name="action_cancel">Cancelar</string>
+    <string name="action_edit">Editar</string>
+    <string name="action_delete">Eliminar</string>
+
+    <!-- Movement detail -->
+    <string name="movement_detail_category">Categoría</string>
+    <string name="movement_detail_method">Método de pago</string>
+    <string name="movement_detail_date">Fecha</string>
+    <string name="movement_detail_merchant">Descripción</string>
+    <string name="movement_detail_source">Origen</string>
+    <string name="movement_delete_confirm_title">¿Eliminar movimiento?</string>
+    <string name="movement_delete_confirm_message">Esta acción no se puede deshacer.</string>
+    <string name="source_manual">Manual</string>
+    <string name="source_notification">Notificación</string>
+    <string name="source_email">Correo</string>
+    <string name="source_sms">SMS</string>
 
     <!-- Reminders -->
     <string name="reminders_title">Recordatorios</string>
     <string name="reminders_upcoming">Próximos</string>
     <string name="reminders_paid">Pagados</string>
+    <string name="reminders_add">Agregar</string>
+    <string name="reminders_empty">Crea recordatorios de tus pagos con el botón Agregar</string>
     <string name="reminder_due">Vence el %1$s</string>
     <string name="reminder_paid_badge">Pagado</string>
+    <string name="reminder_form_title_new">Agregar recordatorio</string>
+    <string name="reminder_form_title_edit">Editar recordatorio</string>
+    <string name="reminder_form_title_label">Título</string>
+    <string name="reminder_form_amount_label">Monto (opcional)</string>
+    <string name="reminder_form_due_label">Fecha de vencimiento</string>
+    <string name="reminder_form_recurrence_label">Recurrencia</string>
+    <string name="reminder_form_save">Guardar recordatorio</string>
+    <string name="reminder_form_error_title">Ingresa un título</string>
+    <string name="reminder_mark_paid">Marcar como pagado</string>
+    <string name="reminder_delete_confirm_title">¿Eliminar recordatorio?</string>
+    <string name="reminder_delete_confirm_message">Esta acción no se puede deshacer.</string>
     <string name="recurrence_none">Única vez</string>
     <string name="recurrence_weekly">Semanal</string>
     <string name="recurrence_monthly">Mensual</string>
@@ -70,6 +100,18 @@
     <!-- Profile -->
     <string name="profile_title">Perfil</string>
     <string name="profile_cards_section">Tarjetas</string>
+    <string name="profile_add_card">Agregar tarjeta</string>
+    <string name="card_form_title_new">Agregar tarjeta</string>
+    <string name="card_form_title_edit">Editar tarjeta</string>
+    <string name="card_form_bank_label">Banco</string>
+    <string name="card_form_last4_label">Últimos 4 dígitos</string>
+    <string name="card_form_label_label">Etiqueta (opcional)</string>
+    <string name="card_form_save">Guardar tarjeta</string>
+    <string name="card_form_delete">Eliminar tarjeta</string>
+    <string name="card_form_error_bank">Ingresa el banco</string>
+    <string name="card_form_error_last4">Ingresa los 4 dígitos de la tarjeta</string>
+    <string name="card_delete_confirm_title">¿Eliminar tarjeta?</string>
+    <string name="card_delete_confirm_message">Tus movimientos no se modifican; los que usaban esta tarjeta quedan sin asociar.</string>
     <string name="profile_data_section">Datos</string>
     <string name="profile_export">Exportar datos</string>
     <string name="profile_export_hint">Exporta tus movimientos en JSON versionado</string>
