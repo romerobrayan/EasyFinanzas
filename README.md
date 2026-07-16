@@ -3,27 +3,29 @@
 [![CI](https://github.com/romerobrayan/EasyFinanzas/actions/workflows/ci.yml/badge.svg)](https://github.com/romerobrayan/EasyFinanzas/actions/workflows/ci.yml)
 
 **Tinto** is a native Android personal-finance app with a dark, wine-toned
-("Vino Tinto") identity. Local-first, built around expenses: a bar-chart
-dashboard, a Nubank-style statement, manual capture, payment reminders —
-and, in later sprints, automatic capture from bank notifications and Gmail.
+("Vino Tinto") identity. Offline-first with a Firebase backend, built around
+expenses: a bar-chart dashboard, a Nubank-style statement, manual capture,
+payment reminders — and, in later sprints, automatic capture from bank
+notifications and Gmail.
 
 UI language is Spanish (es-CO); amounts are Colombian pesos handled as
 integer minor units end to end.
 
-## Status — Sprint 1: UI shell ✅
+## Status — Sprint 1: UI shell ✅ · Sprint 1.5: Firebase ✅
 
-The complete visual shell wired to in-memory mock data: five screens,
-bottom navigation with center FAB, full design system, validated manual
-form. No Room, no capture, no runtime permissions yet — persistence is
-stubbed behind domain repository interfaces so Sprint 2 swaps a Hilt
-binding, not the UI.
+The complete visual shell plus the Firebase backbone: Google sign-in
+(Credential Manager), per-user Cloud Firestore persistence with offline
+cache, Analytics and Crashlytics. A demo mode keeps the app fully
+explorable with sample data before signing in. **One-time console setup
+is required — see [FIREBASE_SETUP.md](FIREBASE_SETUP.md).**
 
 ## Stack
 
 Kotlin · Jetpack Compose (Material 3) · Hilt · Navigation Compose
-(type-safe routes) · coroutines/Flow · kotlinx-datetime — AGP 9.x with
-built-in Kotlin and KSP2, single module, Clean Architecture + MVVM,
-package by feature.
+(type-safe routes) · coroutines/Flow · kotlinx-datetime · Firebase
+(Auth + Google sign-in, Cloud Firestore, Analytics, Crashlytics) —
+AGP 9.x with built-in Kotlin and KSP2, single module, Clean
+Architecture + MVVM, package by feature.
 
 ## Project docs
 
@@ -32,6 +34,7 @@ package by feature.
 | [PROJECT_CONTEXT.md](PROJECT_CONTEXT.md) | Product scope, personas, roadmap |
 | [ARCHITECTURE.md](ARCHITECTURE.md) | Layers, domain model, Room/export design |
 | [DESIGN_SYSTEM.md](DESIGN_SYSTEM.md) | Vino Tinto tokens, type scale, components |
+| [FIREBASE_SETUP.md](FIREBASE_SETUP.md) | One-time Firebase console setup + troubleshooting |
 | [CLAUDE.md](CLAUDE.md) | Working agreements for AI-assisted development |
 | [TASK_SPRINT_1_UI_SHELL.md](TASK_SPRINT_1_UI_SHELL.md) | The Sprint 1 brief |
 

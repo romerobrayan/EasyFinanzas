@@ -44,7 +44,7 @@ jobs:
       # Also publish the APK to an orphan branch so it is downloadable via
       # plain git/raw URLs (Actions artifact downloads require a login).
       - name: Publish debug APK to the ci-apk branch
-        if: success() && startsWith(github.ref_name, 'claude/')
+        if: success() && (github.ref_name == 'main' || startsWith(github.ref_name, 'claude/'))
         env:
           GH_TOKEN: ${{ github.token }}
         run: |

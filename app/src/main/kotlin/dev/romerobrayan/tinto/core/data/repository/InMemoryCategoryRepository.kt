@@ -9,7 +9,10 @@ import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 
-/** TODO(sprint-2): replace with the Room-backed implementation (seeded on first run). */
+/**
+ * Demo-mode categories; also the system set [SyncedCategoryRepository] seeds
+ * into a fresh account's `users/{uid}/categories` collection.
+ */
 @Singleton
 class InMemoryCategoryRepository @Inject constructor() : CategoryRepository {
 

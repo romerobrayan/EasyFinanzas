@@ -79,6 +79,20 @@
     <string name="profile_perm_gmail">Correos de Gmail</string>
     <string name="profile_perm_soon">Próximamente</string>
 
+    <!-- Login / session -->
+    <string name="login_tagline">Tus finanzas personales, claras y en un solo lugar</string>
+    <string name="login_google">Continuar con Google</string>
+    <string name="login_demo">Explorar la demo</string>
+    <string name="login_demo_hint">La demo usa datos de ejemplo y no guarda nada. Con tu cuenta de Google, tus movimientos se respaldan en la nube.</string>
+    <string name="login_error_generic">No se pudo iniciar sesión. Inténtalo de nuevo.</string>
+    <string name="login_error_no_google_account">No encontramos una cuenta de Google en este dispositivo.</string>
+    <string name="login_error_not_configured">Esta compilación aún no tiene Firebase configurado. Revisa FIREBASE_SETUP.md.</string>
+    <string name="profile_session_section">Cuenta</string>
+    <string name="profile_sign_out">Cerrar sesión</string>
+    <string name="profile_sign_out_hint">Tus movimientos quedan guardados en tu cuenta</string>
+    <string name="profile_exit_demo">Salir de la demo</string>
+    <string name="profile_demo_badge">Modo demo</string>
+
     <!-- Shared -->
     <string name="recurring_badge">recurrente</string>
     <string name="date_today">Hoy</string>

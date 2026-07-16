@@ -6,7 +6,7 @@ import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import dagger.hilt.android.AndroidEntryPoint
 import dev.romerobrayan.tinto.core.designsystem.theme.TintoTheme
-import dev.romerobrayan.tinto.navigation.TintoApp
+import dev.romerobrayan.tinto.navigation.TintoRoot
 
 @AndroidEntryPoint
 class MainActivity : ComponentActivity() {
@@ -16,7 +16,7 @@ class MainActivity : ComponentActivity() {
         enableEdgeToEdge()
         setContent {
             TintoTheme {
-                TintoApp()
+                TintoRoot()
             }
         }
     }

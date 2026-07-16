@@ -11,9 +11,9 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 
 /**
- * Sprint-1 in-memory ledger seeded from [MockData].
- * TODO(sprint-2): replace with the Room-backed implementation — only the
- * Hilt binding in RepositoryModule should change.
+ * Demo-mode ledger seeded from [MockData]; [SyncedTransactionRepository]
+ * serves it while the session is [dev.romerobrayan.tinto.core.domain.model.UserSession.Demo].
+ * Nothing here survives a process restart — by design.
  */
 @Singleton
 class InMemoryTransactionRepository @Inject constructor() : TransactionRepository {

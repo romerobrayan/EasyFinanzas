@@ -3,6 +3,7 @@ package dev.romerobrayan.tinto.feature.addtransaction
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import dagger.hilt.android.lifecycle.HiltViewModel
+import dev.romerobrayan.tinto.core.common.TintoAnalytics
 import dev.romerobrayan.tinto.core.domain.model.Money
 import dev.romerobrayan.tinto.core.domain.model.PaymentMethod
 import dev.romerobrayan.tinto.core.domain.model.Transaction
@@ -36,6 +37,7 @@ class AddTransactionViewModel @Inject constructor(
     private val transactionRepository: TransactionRepository,
     private val cardRepository: CardRepository,
     categoryRepository: CategoryRepository,
+    private val analytics: TintoAnalytics,
 ) : ViewModel() {
 
     private val timeZone = TimeZone.currentSystemDefault()
@@ -132,6 +134,7 @@ class AddTransactionViewModel @Inject constructor(
                     updatedAt = now,
                 ),
             )
+            analytics.logAddTransaction(currentForm.type.name, currentForm.method.name)
             _saved.tryEmit(Unit)
         }
     }

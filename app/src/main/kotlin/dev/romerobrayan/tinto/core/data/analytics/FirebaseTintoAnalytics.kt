@@ -1,0 +1,58 @@
+package dev.romerobrayan.tinto.core.data.analytics
+
+import androidx.core.os.bundleOf
+import com.google.firebase.Firebase
+import com.google.firebase.analytics.FirebaseAnalytics
+import com.google.firebase.analytics.analytics
+import com.google.firebase.crashlytics.crashlytics
+import dev.romerobrayan.tinto.core.common.TintoAnalytics
+import javax.inject.Inject
+import javax.inject.Singleton
+
+@Singleton
+class FirebaseTintoAnalytics @Inject constructor() : TintoAnalytics {
+
+    private val analytics get() = Firebase.analytics
+    private val crashlytics get() = Firebase.crashlytics
+
+    override fun setUser(userId: String?) {
+        analytics.setUserId(userId)
+        crashlytics.setUserId(userId.orEmpty())
+    }
+
+    override fun logScreenView(screenName: String) {
+        analytics.logEvent(
+            FirebaseAnalytics.Event.SCREEN_VIEW,
+            bundleOf(FirebaseAnalytics.Param.SCREEN_NAME to screenName),
+        )
+    }
+
+    override fun logLogin(method: String) {
+        analytics.logEvent(
+            FirebaseAnalytics.Event.LOGIN,
+            bundleOf(FirebaseAnalytics.Param.METHOD to method),
+        )
+    }
+
+    override fun logDemoMode() {
+        analytics.logEvent("demo_mode", null)
+    }
+
+    override fun logSignOut() {
+        analytics.logEvent("sign_out", null)
+    }
+
+    override fun logAddTransaction(type: String, method: String) {
+        analytics.logEvent(
+            "add_transaction",
+            bundleOf(
+                "transaction_type" to type,
+                "payment_method" to method,
+            ),
+        )
+    }
+
+    override fun recordError(error: Throwable) {
+        crashlytics.recordException(error)
+    }
+}

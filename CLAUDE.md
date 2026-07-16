@@ -4,13 +4,21 @@ Operating manual for Claude Code on this repository. Read `PROJECT_CONTEXT.md`, 
 
 ## Project
 
-- **Tinto** — a native Android personal-finance app. Dark, wine-toned ("Vino Tinto"). Local-first, no backend yet.
+- **Tinto** — a native Android personal-finance app. Dark, wine-toned ("Vino Tinto"). Offline-first with a Firebase backend.
 - Package: `dev.romerobrayan.tinto` (rename the suffix if the app name changes).
-- Stack: Kotlin, Jetpack Compose, Material 3, Hilt, Room, Navigation Compose, coroutines/Flow.
+- Stack: Kotlin, Jetpack Compose, Material 3, Hilt, Navigation Compose, coroutines/Flow, Firebase (Auth + Google sign-in via Credential Manager, Cloud Firestore, Analytics, Crashlytics).
 - Architecture: Clean Architecture + MVVM, package-by-feature. Layer rules are in `ARCHITECTURE.md`.
 - `compileSdk 35`, `targetSdk 35`, `minSdk 26`.
 
-## Current sprint — Sprint 1: UI shell
+## Firebase state (Sprint 1.5 — done)
+
+- Session gate in `TintoRoot`: `Loading → SignedOut (LoginScreen) → Demo | SignedIn (TintoApp)`. Auth contract is `core/domain/repository/AuthRepository`; impl `core/data/auth/FirebaseAuthRepository`.
+- Data: `Synced*Repository` classes route by session — Cloud Firestore under `users/{uid}/…` when signed in (offline cache on by default), the `InMemory*` sample data in demo mode. Manual mappers in `core/data/firebase/FirestoreMappers.kt` (`Money` as cents `Long`, `Instant` as epoch millis, `LocalDate` as ISO string) — field names are a persisted schema; don't rename them casually.
+- Analytics behind `core/common/TintoAnalytics` (no Firebase types in features); events carry **no amounts/merchants/PII**.
+- `app/google-services.json` in the repo may be the placeholder; real console setup steps live in `FIREBASE_SETUP.md`. `app/debug.keystore` is committed on purpose (shared debug signature for local + CI so the registered SHA-1 stays valid).
+- Firestore security rules: `firestore.rules` (per-user isolation).
+
+## Previous sprint — Sprint 1: UI shell
 
 **Build the complete visual shell wired to in-memory mock data. No Room, no capture, no permissions this sprint.** Deliverable: a navigable, on-brand app that can be clicked through end to end.
 

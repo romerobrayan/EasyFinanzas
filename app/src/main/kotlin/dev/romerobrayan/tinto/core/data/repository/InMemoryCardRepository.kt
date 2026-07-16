@@ -9,7 +9,7 @@ import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 
-/** TODO(sprint-2): replace with the Room-backed implementation. */
+/** Demo-mode sample cards; served by [SyncedCardRepository] during the demo session. */
 @Singleton
 class InMemoryCardRepository @Inject constructor() : CardRepository {
 

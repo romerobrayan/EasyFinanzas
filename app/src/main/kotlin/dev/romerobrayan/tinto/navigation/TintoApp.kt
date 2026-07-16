@@ -2,6 +2,7 @@ package dev.romerobrayan.tinto.navigation
 
 import androidx.compose.foundation.layout.padding
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import androidx.navigation.NavDestination.Companion.hasRoute
@@ -22,9 +23,11 @@ import dev.romerobrayan.tinto.feature.reminders.RemindersScreen
 /**
  * App frame: bottom bar + center FAB around the NavHost. The bar hides on
  * the add-transaction screen (capture mode is full-screen).
+ *
+ * @param onScreenView reports destination changes to analytics as `screen_view`.
  */
 @Composable
-fun TintoApp() {
+fun TintoApp(onScreenView: (String) -> Unit = {}) {
     val navController = rememberNavController()
     val backStackEntry by navController.currentBackStackEntryAsState()
     val currentDestination = backStackEntry?.destination
@@ -36,6 +39,19 @@ fun TintoApp() {
         currentDestination.hasRoute<RemindersRoute>() -> TintoTab.REMINDERS
         currentDestination.hasRoute<ProfileRoute>() -> TintoTab.PROFILE
         else -> null
+    }
+
+    val screenName = when {
+        currentDestination == null -> null
+        currentDestination.hasRoute<DashboardRoute>() -> "dashboard"
+        currentDestination.hasRoute<MovementsRoute>() -> "movements"
+        currentDestination.hasRoute<AddTransactionRoute>() -> "add_transaction"
+        currentDestination.hasRoute<RemindersRoute>() -> "reminders"
+        currentDestination.hasRoute<ProfileRoute>() -> "profile"
+        else -> null
+    }
+    LaunchedEffect(screenName) {
+        screenName?.let(onScreenView)
     }
 
     TintoScaffold(

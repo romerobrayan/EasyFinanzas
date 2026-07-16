@@ -6,7 +6,8 @@
 - UI: Jetpack Compose, Material 3 (`androidx.compose.material3`).
 - Architecture: Clean Architecture + MVVM.
 - DI: Hilt.
-- Persistence: Room (SQLite).
+- Persistence: Cloud Firestore, one subtree per account (`users/{uid}/…`), with the SDK's offline cache so the app works without connectivity. Auth: Firebase Auth (Google, via Credential Manager). A Room staging layer may still appear in the capture sprints (`pending_transactions`).
+- Backend services: Firebase Analytics + Crashlytics behind the `TintoAnalytics` interface in `core/common`.
 - Navigation: Navigation Compose (type-safe routes).
 - Charts: Compose-native custom chart (draw with `Canvas` / `drawScope`) — do **not** pull a heavy third-party chart lib for a simple bar chart; the design demands custom styling anyway. Vico is an acceptable fallback only if the custom implementation becomes a time sink.
 - SDK: `compileSdk 35`, `targetSdk 35`, `minSdk 26` (Android 8.0 — required for reliable `NotificationListenerService`, adaptive icons, and it covers the large majority of active devices).
@@ -43,9 +44,9 @@ dev.romerobrayan.tinto
 
 ### Layer rules
 
-- **presentation** (`feature/*`): Compose screens are stateless and driven by a `UiState` exposed as `StateFlow` from a `@HiltViewModel`. Screens emit events up; ViewModels call use cases (or repositories directly for trivial reads). Never reference Room types in this layer.
-- **domain** (`core/domain`): pure Kotlin, no Android/Room/Compose imports. Holds the domain model, repository interfaces, and use cases. Money math lives here.
-- **data** (`core/data`): Room implementation of the repository interfaces. Maps `@Entity` rows to domain models at the repository boundary so domain never leaks persistence details.
+- **presentation** (`feature/*`): Compose screens are stateless and driven by a `UiState` exposed as `StateFlow` from a `@HiltViewModel`. Screens emit events up; ViewModels call use cases (or repositories directly for trivial reads). Never reference persistence types in this layer. One deliberate exception to "no platform calls in composables": the Credential Manager account picker (`feature/login/GoogleCredential.kt`) needs the Activity context, so the login screen fetches the Google ID token and hands it to the ViewModel.
+- **domain** (`core/domain`): pure Kotlin, no Android/Firebase/Compose imports. Holds the domain model, repository interfaces (including `AuthRepository` + `UserSession`), and use cases. Money math lives here.
+- **data** (`core/data`): Firestore-backed `Synced*Repository` implementations route by session — signed-in traffic goes to `users/{uid}/…` documents, demo mode reuses the `InMemory*` sample repositories. Manual mappers (`core/data/firebase/FirestoreMappers.kt`) convert documents to domain models at the repository boundary so domain never leaks persistence details; their field names are a persisted schema.
 
 Use cases are warranted where logic is non-trivial (aggregating spend into chart buckets, detecting recurrence, deduping captured transactions). Trivial CRUD may go straight ViewModel → repository.
 
