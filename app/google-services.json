@@ -14,7 +14,15 @@
       },
       "oauth_client": [
         {
-          "client_id": "REPLACE_ME-901298125707.apps.googleusercontent.com",
+          "client_id": "901298125707-hl5m3fk9ktb28schkiiso5icnvcef3qv.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "dev.romerobrayan.tinto",
+            "certificate_hash": "b0e3a1f4c0355f44a34d023a6a0318eb91b369b7"
+          }
+        },
+        {
+          "client_id": "901298125707-u4rjcafn8ap0roisipf2e3gub3lt2h3c.apps.googleusercontent.com",
           "client_type": 3
         }
       ],
@@ -25,7 +33,12 @@
       ],
       "services": {
         "appinvite_service": {
-          "other_platform_oauth_client": []
+          "other_platform_oauth_client": [
+            {
+              "client_id": "901298125707-u4rjcafn8ap0roisipf2e3gub3lt2h3c.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
         }
       }
     }

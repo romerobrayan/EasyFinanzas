@@ -4,12 +4,13 @@ The code side of the Firebase integration is **done**: Google sign-in, per-user
 Cloud Firestore persistence (with offline cache), Analytics and Crashlytics are
 all wired in.
 
-**Current status of `app/google-services.json`:** it carries the real project
-keys (so Analytics and Crashlytics already report), but its `oauth_client`
-entry is still the `REPLACE_ME` placeholder — the file was first downloaded
-before Google sign-in was enabled. Until steps 2 and 5 below are done and the
-re-downloaded file is committed, the Google button shows the "not configured"
-message and only demo mode works.
+**Current status:** `app/google-services.json` is the real, complete config —
+project keys, the Android OAuth client (pinned-keystore SHA-1 registered) and
+the web OAuth client. Steps 1, 2 and 5 below are **done**; they're kept for
+reference (e.g. if the app is ever re-registered or a release keystore is
+added). Make sure steps 3–4 (Firestore database + rules) and 6 (Crashlytics)
+are done in the console — the app can sign in without them, but movements
+won't sync until the database exists.
 
 Follow these one-time steps in the [Firebase console](https://console.firebase.google.com/u/0/project/tintoapp-romerodev/overview)
 (~10 minutes, everything below is on the free Spark plan).
