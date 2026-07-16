@@ -18,6 +18,10 @@ Operating manual for Claude Code on this repository. Read `PROJECT_CONTEXT.md`, 
 - `app/google-services.json` in the repo may be the placeholder; real console setup steps live in `FIREBASE_SETUP.md`. `app/debug.keystore` is committed on purpose (shared debug signature for local + CI so the registered SHA-1 stays valid).
 - Firestore security rules: `firestore.rules` (per-user isolation).
 
+## Current sprint — Sprint 2: real-account CRUD
+
+**The brief is `TASK_SPRINT_2_CRUD.md` — read it before writing code.** In short: movement detail + edit + delete, card management in Perfil, reminders create/edit/mark-paid with recurrence rollover. Same behavior in demo (in-memory) and signed-in (Firestore) modes. No capture, no export, no schema renames this sprint.
+
 ## Previous sprint — Sprint 1: UI shell
 
 **Build the complete visual shell wired to in-memory mock data. No Room, no capture, no permissions this sprint.** Deliverable: a navigable, on-brand app that can be clicked through end to end.
