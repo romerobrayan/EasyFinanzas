@@ -17,6 +17,7 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.rounded.Event
+import androidx.compose.material.icons.rounded.Schedule
 import androidx.compose.material3.BottomSheetDefaults
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
@@ -47,6 +48,7 @@ import dev.romerobrayan.tinto.core.common.MoneyFormat
 import dev.romerobrayan.tinto.core.designsystem.component.TintoConfirmDialog
 import dev.romerobrayan.tinto.core.designsystem.component.TintoDatePickerDialog
 import dev.romerobrayan.tinto.core.designsystem.component.TintoSelectorPill
+import dev.romerobrayan.tinto.core.designsystem.component.TintoTimePickerDialog
 import dev.romerobrayan.tinto.core.designsystem.component.tintoTextFieldColors
 import dev.romerobrayan.tinto.core.designsystem.theme.ButtonShape
 import dev.romerobrayan.tinto.core.designsystem.theme.LocalTintoColors
@@ -56,6 +58,10 @@ import dev.romerobrayan.tinto.core.designsystem.theme.SheetShape
 import dev.romerobrayan.tinto.core.domain.model.Money
 import dev.romerobrayan.tinto.core.domain.model.Recurrence
 import kotlinx.datetime.LocalDate
+import kotlinx.datetime.LocalTime
+
+/** Suggested starting point when the user first opens the time picker. */
+private val DefaultReminderTime = LocalTime(8, 0)
 
 /**
  * Bottom-sheet form for creating or editing a payment reminder: título
@@ -70,6 +76,7 @@ internal fun ReminderFormSheet(
     onTitleChanged: (String) -> Unit,
     onAmountChanged: (String) -> Unit,
     onDueDateChanged: (LocalDate) -> Unit,
+    onDueTimeChanged: (LocalTime?) -> Unit,
     onRecurrenceChanged: (Recurrence) -> Unit,
     onSubmit: () -> Unit,
     onMarkPaid: () -> Unit,
@@ -80,6 +87,7 @@ internal fun ReminderFormSheet(
     val tinto = LocalTintoColors.current
     val isEditing = form.editingReminderId != null
     var showDatePicker by rememberSaveable { mutableStateOf(false) }
+    var showTimePicker by rememberSaveable { mutableStateOf(false) }
     var showDeleteConfirm by rememberSaveable { mutableStateOf(false) }
 
     ModalBottomSheet(
@@ -140,25 +148,67 @@ internal fun ReminderFormSheet(
             )
             Spacer(Modifier.height(8.dp))
             Row(
-                modifier = Modifier
-                    .clip(PillShape)
-                    .background(MaterialTheme.colorScheme.surfaceVariant)
-                    .clickable { showDatePicker = true }
-                    .padding(horizontal = 14.dp, vertical = 8.dp),
+                horizontalArrangement = Arrangement.spacedBy(8.dp),
                 verticalAlignment = Alignment.CenterVertically,
             ) {
-                Icon(
-                    imageVector = Icons.Rounded.Event,
-                    contentDescription = null,
-                    tint = tinto.gold,
-                    modifier = Modifier.size(16.dp),
-                )
-                Spacer(Modifier.width(6.dp))
-                Text(
-                    text = Dates.dayOfMonthName(form.dueDate),
-                    style = type.body.copy(fontWeight = FontWeight.Medium),
-                    color = MaterialTheme.colorScheme.onBackground,
-                )
+                Row(
+                    modifier = Modifier
+                        .clip(PillShape)
+                        .background(MaterialTheme.colorScheme.surfaceVariant)
+                        .clickable { showDatePicker = true }
+                        .padding(horizontal = 14.dp, vertical = 8.dp),
+                    verticalAlignment = Alignment.CenterVertically,
+                ) {
+                    Icon(
+                        imageVector = Icons.Rounded.Event,
+                        contentDescription = null,
+                        tint = tinto.gold,
+                        modifier = Modifier.size(16.dp),
+                    )
+                    Spacer(Modifier.width(6.dp))
+                    Text(
+                        text = Dates.dayOfMonthName(form.dueDate),
+                        style = type.body.copy(fontWeight = FontWeight.Medium),
+                        color = MaterialTheme.colorScheme.onBackground,
+                    )
+                }
+                Row(
+                    modifier = Modifier
+                        .clip(PillShape)
+                        .background(MaterialTheme.colorScheme.surfaceVariant)
+                        .clickable { showTimePicker = true }
+                        .padding(horizontal = 14.dp, vertical = 8.dp),
+                    verticalAlignment = Alignment.CenterVertically,
+                ) {
+                    Icon(
+                        imageVector = Icons.Rounded.Schedule,
+                        contentDescription = null,
+                        tint = tinto.gold,
+                        modifier = Modifier.size(16.dp),
+                    )
+                    Spacer(Modifier.width(6.dp))
+                    Text(
+                        text = form.dueTime?.let { Dates.timeLabel(it) }
+                            ?: stringResource(R.string.reminder_form_time_add),
+                        style = type.body.copy(fontWeight = FontWeight.Medium),
+                        color = if (form.dueTime != null) {
+                            MaterialTheme.colorScheme.onBackground
+                        } else {
+                            MaterialTheme.colorScheme.onSurfaceVariant
+                        },
+                    )
+                }
+                if (form.dueTime != null) {
+                    Text(
+                        text = stringResource(R.string.reminder_form_time_remove),
+                        style = type.caption,
+                        color = tinto.muted,
+                        modifier = Modifier
+                            .clip(PillShape)
+                            .clickable { onDueTimeChanged(null) }
+                            .padding(horizontal = 8.dp, vertical = 6.dp),
+                    )
+                }
             }
 
             Spacer(Modifier.height(20.dp))
@@ -241,6 +291,17 @@ internal fun ReminderFormSheet(
                 showDatePicker = false
             },
             onDismiss = { showDatePicker = false },
+        )
+    }
+
+    if (showTimePicker) {
+        TintoTimePickerDialog(
+            initialTime = form.dueTime ?: DefaultReminderTime,
+            onConfirm = { time ->
+                onDueTimeChanged(time)
+                showTimePicker = false
+            },
+            onDismiss = { showTimePicker = false },
         )
     }
 

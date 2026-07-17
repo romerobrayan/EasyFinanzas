@@ -12,6 +12,7 @@ import dev.romerobrayan.tinto.core.domain.model.TransactionSource
 import dev.romerobrayan.tinto.core.domain.model.TransactionType
 import kotlinx.datetime.Instant
 import kotlinx.datetime.LocalDate
+import kotlinx.datetime.LocalTime
 
 /**
  * Manual Firestore document mappers. Deliberately not `toObject()` reflection:
@@ -89,6 +90,7 @@ internal fun Reminder.toFirestoreMap(): Map<String, Any?> = mapOf(
     "title" to title,
     "amountCents" to amount?.cents,
     "dueDate" to dueDate.toString(),
+    "dueTime" to dueTime?.toString(),
     "recurrence" to recurrence.name,
     "isPaid" to isPaid,
 )
@@ -99,6 +101,9 @@ internal fun DocumentSnapshot.toReminder(): Reminder? = runCatching {
         title = getString("title") ?: return null,
         amount = getLong("amountCents")?.let(::Money),
         dueDate = LocalDate.parse(getString("dueDate") ?: return null),
+        // Tolerant on purpose: a malformed time degrades to date-only
+        // instead of dropping the whole reminder.
+        dueTime = getString("dueTime")?.let { runCatching { LocalTime.parse(it) }.getOrNull() },
         recurrence = getString("recurrence")?.let(Recurrence::valueOf) ?: Recurrence.NONE,
         isPaid = getBoolean("isPaid") ?: false,
     )

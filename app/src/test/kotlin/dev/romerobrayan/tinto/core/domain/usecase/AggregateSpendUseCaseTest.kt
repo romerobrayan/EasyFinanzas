@@ -70,6 +70,20 @@ class AggregateSpendUseCaseTest {
     }
 
     @Test
+    fun `income aggregation counts income and excludes expenses`() {
+        val transactions = listOf(
+            transaction(LocalDate(2026, 7, 3), 50_000),
+            transaction(LocalDate(2026, 7, 5), 999_000, type = TransactionType.INCOME),
+            transaction(LocalDate(2026, 6, 1), 850_000, type = TransactionType.INCOME),
+        )
+
+        val buckets = useCase(transactions, Period.MONTH, anchor, zone, TransactionType.INCOME)
+
+        assertEquals(Money.ofPesos(999_000), buckets.last().total)
+        assertEquals(Money.ofPesos(850_000), buckets[5].total)
+    }
+
+    @Test
     fun `day chart covers exactly the last seven days`() {
         val transactions = listOf(
             transaction(LocalDate(2026, 7, 5), 10_000),

@@ -11,6 +11,7 @@ import dev.romerobrayan.tinto.core.domain.model.TransactionSource
 import dev.romerobrayan.tinto.core.domain.model.TransactionType
 import kotlinx.datetime.LocalDate
 import kotlinx.datetime.LocalDateTime
+import kotlinx.datetime.LocalTime
 import kotlinx.datetime.TimeZone
 import kotlinx.datetime.toInstant
 
@@ -136,6 +137,7 @@ object MockData {
             title = "Pago tarjeta Nu",
             amount = Money.ofPesos(412_000),
             dueDate = LocalDate(2026, 7, 15),
+            dueTime = LocalTime(20, 0),
             recurrence = Recurrence.MONTHLY,
             isPaid = false,
         ),

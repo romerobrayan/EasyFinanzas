@@ -1,9 +1,13 @@
 package dev.romerobrayan.tinto.core.common
 
+import java.time.format.DateTimeFormatter
+import java.time.format.FormatStyle
 import java.time.format.TextStyle
 import java.util.Locale
 import kotlinx.datetime.LocalDate
+import kotlinx.datetime.LocalTime
 import kotlinx.datetime.toJavaLocalDate
+import kotlinx.datetime.toJavaLocalTime
 
 /**
  * Spanish (es-CO) date labels for the UI. Month/day names come from platform
@@ -34,4 +38,9 @@ object Dates {
 
     /** "11 de julio" */
     fun dayOfMonthName(date: LocalDate): String = "${date.dayOfMonth} de ${monthName(date)}"
+
+    private val timeFormatter = DateTimeFormatter.ofLocalizedTime(FormatStyle.SHORT).withLocale(locale)
+
+    /** "8:00 p. m." */
+    fun timeLabel(time: LocalTime): String = time.toJavaLocalTime().format(timeFormatter)
 }

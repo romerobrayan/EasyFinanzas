@@ -3,6 +3,7 @@ package dev.romerobrayan.tinto.feature.reminders
 import dev.romerobrayan.tinto.core.domain.model.Money
 import dev.romerobrayan.tinto.core.domain.model.Recurrence
 import kotlinx.datetime.LocalDate
+import kotlinx.datetime.LocalTime
 
 data class ReminderUi(
     val id: String,
@@ -22,6 +23,8 @@ data class ReminderFormUiState(
     /** Raw peso digits as typed; formatting happens in the amount field. */
     val amountDigits: String = "",
     val dueDate: LocalDate,
+    /** Optional time of day; null = date-only reminder. */
+    val dueTime: LocalTime? = null,
     val recurrence: Recurrence = Recurrence.NONE,
     /** "Marcar como pagado" shows only for existing, still-unpaid reminders. */
     val canMarkPaid: Boolean = false,

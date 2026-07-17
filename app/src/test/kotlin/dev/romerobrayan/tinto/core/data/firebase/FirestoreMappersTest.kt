@@ -10,6 +10,7 @@ import dev.romerobrayan.tinto.core.domain.model.TransactionSource
 import dev.romerobrayan.tinto.core.domain.model.TransactionType
 import kotlinx.datetime.Instant
 import kotlinx.datetime.LocalDate
+import kotlinx.datetime.LocalTime
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNull
 import org.junit.Test
@@ -105,6 +106,7 @@ class FirestoreMappersTest {
             title = "Arriendo",
             amount = Money.ofPesos(950_000),
             dueDate = LocalDate(2026, 8, 1),
+            dueTime = LocalTime(20, 30),
             recurrence = Recurrence.MONTHLY,
             isPaid = false,
         ).toFirestoreMap()
@@ -112,7 +114,22 @@ class FirestoreMappersTest {
         assertEquals("Arriendo", map["title"])
         assertEquals(95_000_000L, map["amountCents"])
         assertEquals("2026-08-01", map["dueDate"])
+        assertEquals("20:30", map["dueTime"])
         assertEquals("MONTHLY", map["recurrence"])
         assertEquals(false, map["isPaid"])
+    }
+
+    @Test
+    fun `date-only reminder keeps dueTime null`() {
+        val map = Reminder(
+            id = "rem-2",
+            title = "Internet",
+            amount = null,
+            dueDate = LocalDate(2026, 7, 21),
+            recurrence = Recurrence.MONTHLY,
+            isPaid = false,
+        ).toFirestoreMap()
+
+        assertNull(map["dueTime"])
     }
 }

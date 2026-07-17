@@ -1,16 +1,25 @@
 package dev.romerobrayan.tinto.feature.profile
 
+import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.imePadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.rounded.ArrowDropDown
 import androidx.compose.material3.BottomSheetDefaults
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.DropdownMenu
+import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.Text
@@ -23,6 +32,7 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
@@ -37,9 +47,10 @@ import dev.romerobrayan.tinto.core.designsystem.theme.LocalTintoTypography
 import dev.romerobrayan.tinto.core.designsystem.theme.SheetShape
 
 /**
- * Bottom-sheet form for adding or editing a registered card: banco (required),
- * últimos 4 dígitos (exactly four), etiqueta opcional. Editing adds an
- * "Eliminar tarjeta" action behind a confirmation dialog.
+ * Bottom-sheet form for adding or editing a registered card: banco (required,
+ * picked from the supported issuer list), últimos 4 dígitos (exactly four),
+ * etiqueta opcional. Editing adds an "Eliminar tarjeta" action behind a
+ * confirmation dialog.
  */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -79,15 +90,7 @@ internal fun CardFormSheet(
             )
 
             Spacer(Modifier.height(16.dp))
-            TextField(
-                value = form.bank,
-                onValueChange = onBankChanged,
-                label = { Text(stringResource(R.string.card_form_bank_label)) },
-                singleLine = true,
-                colors = tintoTextFieldColors(),
-                shape = ButtonShape,
-                modifier = Modifier.fillMaxWidth(),
-            )
+            BankDropdownField(bank = form.bank, onBankChanged = onBankChanged)
             if (CardFormValidator.Error.BANK_REQUIRED in form.errors) {
                 Spacer(Modifier.height(4.dp))
                 ErrorText(stringResource(R.string.card_form_error_bank))
@@ -166,6 +169,90 @@ internal fun CardFormSheet(
         )
     }
 }
+
+/**
+ * Bank picker styled like the filled text fields around it. The list is the
+ * fixed set of issuers Tinto supports; an existing card whose bank predates
+ * the list still displays (and keeps) its stored value until changed.
+ */
+@Composable
+private fun BankDropdownField(
+    bank: String,
+    onBankChanged: (String) -> Unit,
+) {
+    val type = LocalTintoTypography.current
+    val tinto = LocalTintoColors.current
+    var expanded by rememberSaveable { mutableStateOf(false) }
+
+    Box {
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .clip(ButtonShape)
+                .background(MaterialTheme.colorScheme.surfaceVariant)
+                .clickable { expanded = true }
+                .padding(horizontal = 16.dp, vertical = 10.dp),
+            verticalAlignment = Alignment.CenterVertically,
+        ) {
+            Column(Modifier.weight(1f)) {
+                Text(
+                    text = stringResource(R.string.card_form_bank_label),
+                    style = type.caption,
+                    color = tinto.muted,
+                )
+                Spacer(Modifier.height(2.dp))
+                Text(
+                    text = bank.ifEmpty { stringResource(R.string.card_form_bank_select) },
+                    style = type.body,
+                    color = if (bank.isEmpty()) {
+                        MaterialTheme.colorScheme.onSurfaceVariant
+                    } else {
+                        MaterialTheme.colorScheme.onBackground
+                    },
+                )
+            }
+            Icon(
+                imageVector = Icons.Rounded.ArrowDropDown,
+                contentDescription = null,
+                tint = tinto.muted,
+            )
+        }
+        DropdownMenu(
+            expanded = expanded,
+            onDismissRequest = { expanded = false },
+        ) {
+            TintoBanks.forEach { option ->
+                DropdownMenuItem(
+                    text = {
+                        Text(
+                            text = option,
+                            style = type.body,
+                            color = if (option == bank) {
+                                tinto.gold
+                            } else {
+                                MaterialTheme.colorScheme.onBackground
+                            },
+                        )
+                    },
+                    onClick = {
+                        onBankChanged(option)
+                        expanded = false
+                    },
+                )
+            }
+        }
+    }
+}
+
+/** The issuers offered in the card form; stored verbatim as the card's bank. */
+private val TintoBanks = listOf(
+    "Bancolombia",
+    "NU Bank",
+    "Global66",
+    "Daviplata",
+    "Nequi",
+    "101Fintech",
+)
 
 @Composable
 private fun ErrorText(message: String) {

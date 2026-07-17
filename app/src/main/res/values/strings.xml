@@ -17,6 +17,9 @@
 
     <!-- Dashboard -->
     <string name="dashboard_expenses_of">Gastos de %1$s</string>
+    <string name="dashboard_income_of">Ingresos de %1$s</string>
+    <string name="dashboard_type_expenses">Gastos</string>
+    <string name="dashboard_type_income">Ingresos</string>
     <string name="dashboard_comparison_down">%1$d%% menos vs %2$s</string>
     <string name="dashboard_comparison_up">%1$d%% más vs %2$s</string>
     <string name="dashboard_comparison_equal">Igual que %1$s</string>
@@ -86,6 +89,8 @@
     <string name="reminder_form_title_label">Título</string>
     <string name="reminder_form_amount_label">Monto (opcional)</string>
     <string name="reminder_form_due_label">Fecha de vencimiento</string>
+    <string name="reminder_form_time_add">Agregar hora</string>
+    <string name="reminder_form_time_remove">Quitar</string>
     <string name="reminder_form_recurrence_label">Recurrencia</string>
     <string name="reminder_form_save">Guardar recordatorio</string>
     <string name="reminder_form_error_title">Ingresa un título</string>
@@ -104,11 +109,12 @@
     <string name="card_form_title_new">Agregar tarjeta</string>
     <string name="card_form_title_edit">Editar tarjeta</string>
     <string name="card_form_bank_label">Banco</string>
+    <string name="card_form_bank_select">Selecciona el banco</string>
     <string name="card_form_last4_label">Últimos 4 dígitos</string>
     <string name="card_form_label_label">Etiqueta (opcional)</string>
     <string name="card_form_save">Guardar tarjeta</string>
     <string name="card_form_delete">Eliminar tarjeta</string>
-    <string name="card_form_error_bank">Ingresa el banco</string>
+    <string name="card_form_error_bank">Selecciona el banco</string>
     <string name="card_form_error_last4">Ingresa los 4 dígitos de la tarjeta</string>
     <string name="card_delete_confirm_title">¿Eliminar tarjeta?</string>
     <string name="card_delete_confirm_message">Tus movimientos no se modifican; los que usaban esta tarjeta quedan sin asociar.</string>

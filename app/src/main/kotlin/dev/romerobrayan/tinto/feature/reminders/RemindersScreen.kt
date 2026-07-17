@@ -59,6 +59,7 @@ fun RemindersScreen(
             onTitleChanged = viewModel::onTitleChanged,
             onAmountChanged = viewModel::onAmountChanged,
             onDueDateChanged = viewModel::onDueDateChanged,
+            onDueTimeChanged = viewModel::onDueTimeChanged,
             onRecurrenceChanged = viewModel::onRecurrenceChanged,
             onSubmit = viewModel::onSubmit,
             onMarkPaid = viewModel::onMarkPaid,

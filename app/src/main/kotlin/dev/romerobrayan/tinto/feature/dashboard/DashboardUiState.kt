@@ -5,12 +5,15 @@ import dev.romerobrayan.tinto.core.designsystem.component.ChartBarUi
 import dev.romerobrayan.tinto.core.designsystem.component.MonthOption
 import dev.romerobrayan.tinto.core.domain.model.Money
 import dev.romerobrayan.tinto.core.domain.model.Period
+import dev.romerobrayan.tinto.core.domain.model.TransactionType
 
 data class DashboardUiState(
     val monthLabel: String = "",
     val monthOptions: List<MonthOption> = emptyList(),
     val selectedMonthKey: String = "",
     val selectedPeriod: Period = Period.MONTH,
+    /** Whether the chart + hero aggregate expenses or income. */
+    val selectedType: TransactionType = TransactionType.EXPENSE,
     val bars: List<ChartBarUi> = emptyList(),
     val selectedBarIndex: Int = 0,
     val heroAmount: Money = Money.Zero,
@@ -25,6 +28,8 @@ data class DashboardUiState(
 data class ComparisonUi(
     val percent: Int,
     val isDecrease: Boolean,
+    /** Good news given the type: spending down, or income up — tints green. */
+    val isPositiveChange: Boolean,
     val versusPeriod: Period,
     val versusDateLabel: String,
 )

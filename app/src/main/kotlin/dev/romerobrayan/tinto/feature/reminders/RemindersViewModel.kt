@@ -22,6 +22,7 @@ import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import kotlinx.datetime.Clock
 import kotlinx.datetime.LocalDate
+import kotlinx.datetime.LocalTime
 import kotlinx.datetime.TimeZone
 import kotlinx.datetime.todayIn
 
@@ -38,6 +39,7 @@ class RemindersViewModel @Inject constructor(
         val title: String = "",
         val amountDigits: String = "",
         val dueDate: LocalDate,
+        val dueTime: LocalTime? = null,
         val recurrence: Recurrence = Recurrence.NONE,
         /** Paid state of the reminder being edited; preserved on save. */
         val editingIsPaid: Boolean = false,
@@ -63,6 +65,7 @@ class RemindersViewModel @Inject constructor(
                     title = it.title,
                     amountDigits = it.amountDigits,
                     dueDate = it.dueDate,
+                    dueTime = it.dueTime,
                     recurrence = it.recurrence,
                     canMarkPaid = it.editingReminderId != null && !it.editingIsPaid,
                     errors = if (it.submitAttempted) validate(it) else emptySet(),
@@ -84,6 +87,7 @@ class RemindersViewModel @Inject constructor(
                 title = reminder.title,
                 amountDigits = reminder.amount?.let { (it.cents / CENTS_PER_PESO).toString() }.orEmpty(),
                 dueDate = reminder.dueDate,
+                dueTime = reminder.dueTime,
                 recurrence = reminder.recurrence,
                 editingIsPaid = reminder.isPaid,
             )
@@ -110,6 +114,11 @@ class RemindersViewModel @Inject constructor(
         form.update { it?.copy(dueDate = date) }
     }
 
+    /** null clears the time back to a date-only reminder. */
+    fun onDueTimeChanged(time: LocalTime?) {
+        form.update { it?.copy(dueTime = time) }
+    }
+
     fun onRecurrenceChanged(recurrence: Recurrence) {
         form.update { it?.copy(recurrence = recurrence) }
     }
@@ -128,6 +137,7 @@ class RemindersViewModel @Inject constructor(
                     ?.takeIf { it > 0 }
                     ?.let(Money::ofPesos),
                 dueDate = currentForm.dueDate,
+                dueTime = currentForm.dueTime,
                 recurrence = currentForm.recurrence,
                 isPaid = currentForm.editingReminderId != null && currentForm.editingIsPaid,
             )
@@ -173,7 +183,8 @@ class RemindersViewModel @Inject constructor(
         id = id,
         title = title,
         amount = amount,
-        dueDateLabel = Dates.dayOfMonthName(dueDate),
+        dueDateLabel = Dates.dayOfMonthName(dueDate) +
+            (dueTime?.let { ", ${Dates.timeLabel(it)}" }.orEmpty()),
         recurrence = recurrence,
         isPaid = isPaid,
     )

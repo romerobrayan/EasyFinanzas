@@ -2,6 +2,7 @@ package dev.romerobrayan.tinto.feature.dashboard
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -42,10 +43,12 @@ import dev.romerobrayan.tinto.core.designsystem.component.MovementDetailSheet
 import dev.romerobrayan.tinto.core.designsystem.component.PeriodSelector
 import dev.romerobrayan.tinto.core.designsystem.component.StatementRow
 import dev.romerobrayan.tinto.core.designsystem.component.TintoBarChart
+import dev.romerobrayan.tinto.core.designsystem.component.TintoSelectorPill
 import dev.romerobrayan.tinto.core.designsystem.theme.LocalTintoColors
 import dev.romerobrayan.tinto.core.designsystem.theme.LocalTintoTypography
 import dev.romerobrayan.tinto.core.designsystem.theme.PillShape
 import dev.romerobrayan.tinto.core.domain.model.Period
+import dev.romerobrayan.tinto.core.domain.model.TransactionType
 
 @Composable
 fun DashboardScreen(
@@ -58,6 +61,7 @@ fun DashboardScreen(
     DashboardContent(
         state = state,
         onPeriodSelected = viewModel::onPeriodSelected,
+        onTypeSelected = viewModel::onTypeSelected,
         onBarSelected = viewModel::onBarSelected,
         onMonthSelected = viewModel::onMonthSelected,
         onSeeAll = onSeeAll,
@@ -71,6 +75,7 @@ fun DashboardScreen(
 private fun DashboardContent(
     state: DashboardUiState,
     onPeriodSelected: (Period) -> Unit,
+    onTypeSelected: (TransactionType) -> Unit,
     onBarSelected: (Int) -> Unit,
     onMonthSelected: (String) -> Unit,
     onSeeAll: () -> Unit,
@@ -102,6 +107,20 @@ private fun DashboardContent(
         Spacer(Modifier.height(16.dp))
         PeriodSelector(selected = state.selectedPeriod, onSelect = onPeriodSelected)
 
+        Spacer(Modifier.height(12.dp))
+        Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+            TintoSelectorPill(
+                label = stringResource(R.string.dashboard_type_expenses),
+                selected = state.selectedType == TransactionType.EXPENSE,
+                onClick = { onTypeSelected(TransactionType.EXPENSE) },
+            )
+            TintoSelectorPill(
+                label = stringResource(R.string.dashboard_type_income),
+                selected = state.selectedType == TransactionType.INCOME,
+                onClick = { onTypeSelected(TransactionType.INCOME) },
+            )
+        }
+
         Spacer(Modifier.height(20.dp))
         TintoBarChart(
             bars = state.bars,
@@ -111,7 +130,14 @@ private fun DashboardContent(
 
         Spacer(Modifier.height(16.dp))
         Text(
-            text = stringResource(R.string.dashboard_expenses_of, heroLabelCore(state)),
+            text = stringResource(
+                if (state.selectedType == TransactionType.EXPENSE) {
+                    R.string.dashboard_expenses_of
+                } else {
+                    R.string.dashboard_income_of
+                },
+                heroLabelCore(state),
+            ),
             style = type.caption,
             color = tinto.muted,
         )
@@ -224,7 +250,7 @@ private fun ComparisonChip(comparison: ComparisonUi) {
             Icon(
                 imageVector = if (comparison.isDecrease) Icons.Rounded.ArrowDownward else Icons.Rounded.ArrowUpward,
                 contentDescription = null,
-                tint = if (comparison.isDecrease) tinto.income else tinto.expense,
+                tint = if (comparison.isPositiveChange) tinto.income else tinto.expense,
                 modifier = Modifier.size(14.dp),
             )
             Spacer(Modifier.width(4.dp))

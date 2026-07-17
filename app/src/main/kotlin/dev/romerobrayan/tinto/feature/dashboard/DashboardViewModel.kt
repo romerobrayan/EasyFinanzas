@@ -15,6 +15,7 @@ import dev.romerobrayan.tinto.core.domain.model.ChartBucket
 import dev.romerobrayan.tinto.core.domain.model.Money
 import dev.romerobrayan.tinto.core.domain.model.Period
 import dev.romerobrayan.tinto.core.domain.model.Transaction
+import dev.romerobrayan.tinto.core.domain.model.TransactionType
 import dev.romerobrayan.tinto.core.domain.repository.CardRepository
 import dev.romerobrayan.tinto.core.domain.repository.CategoryRepository
 import dev.romerobrayan.tinto.core.domain.repository.TransactionRepository
@@ -53,6 +54,7 @@ class DashboardViewModel @Inject constructor(
 
     private data class Selection(
         val period: Period = Period.MONTH,
+        val type: TransactionType = TransactionType.EXPENSE,
         /** ISO date of the selected month's first day; null = latest data month. */
         val monthKey: String? = null,
         /** Tapped chart bucket; null = the last (current) bucket. */
@@ -72,6 +74,10 @@ class DashboardViewModel @Inject constructor(
 
     fun onPeriodSelected(period: Period) {
         selection.update { it.copy(period = period, bucketIndex = null) }
+    }
+
+    fun onTypeSelected(type: TransactionType) {
+        selection.update { it.copy(type = type, bucketIndex = null) }
     }
 
     fun onBarSelected(index: Int) {
@@ -118,7 +124,13 @@ class DashboardViewModel @Inject constructor(
             selectedMonthStart.plus(1, DateTimeUnit.MONTH).minus(1, DateTimeUnit.DAY)
         }
 
-        val buckets = aggregateSpend(transactions, currentSelection.period, anchor, timeZone)
+        val buckets = aggregateSpend(
+            transactions,
+            currentSelection.period,
+            anchor,
+            timeZone,
+            currentSelection.type,
+        )
         val selectedIndex = (currentSelection.bucketIndex ?: buckets.lastIndex)
             .coerceIn(0, buckets.lastIndex.coerceAtLeast(0))
         val selectedBucket = buckets.getOrNull(selectedIndex)
@@ -142,6 +154,10 @@ class DashboardViewModel @Inject constructor(
                 ComparisonUi(
                     percent = (abs(delta) * 100.0 / previous.total.cents).roundToInt(),
                     isDecrease = delta < 0,
+                    isPositiveChange = when (currentSelection.type) {
+                        TransactionType.EXPENSE -> delta < 0
+                        TransactionType.INCOME -> delta > 0
+                    },
                     versusPeriod = currentSelection.period,
                     versusDateLabel = heroDateLabel(previous, currentSelection.period),
                 )
@@ -153,6 +169,7 @@ class DashboardViewModel @Inject constructor(
             monthOptions = monthOptions,
             selectedMonthKey = selectedMonthStart.toString(),
             selectedPeriod = currentSelection.period,
+            selectedType = currentSelection.type,
             bars = buckets.map { ChartBarUi(label = axisLabel(it, currentSelection.period), value = it.total) },
             selectedBarIndex = selectedIndex,
             heroAmount = selectedBucket?.total ?: Money.Zero,
