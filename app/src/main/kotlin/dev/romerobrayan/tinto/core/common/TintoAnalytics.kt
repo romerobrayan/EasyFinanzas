@@ -40,6 +40,24 @@ interface TintoAnalytics {
     /** [recurrence] is the coarse enum name only — never titles or amounts. */
     fun logReminderPaid(recurrence: String)
 
+    /** Capture opt-in completed with the SMS permissions granted. */
+    fun logCapturePermissionGranted()
+
+    /**
+     * A capture was staged for review. Coarse [channel] (SMS/NOTIFICATION) and
+     * [issuer] (bank name) only — never amounts, merchants, senders or raw text.
+     */
+    fun logCaptureDetected(channel: String, issuer: String)
+
+    /** A pending capture was confirmed into the ledger. The event alone. */
+    fun logPendingConfirmed()
+
+    /** A pending capture was discarded. The event alone. */
+    fun logPendingDiscarded()
+
+    /** The review sheet opened flagged as a likely duplicate. The event alone. */
+    fun logPendingDuplicateShown()
+
     /** Non-fatal error worth seeing in Crashlytics (e.g. a sync listener failure). */
     fun recordError(error: Throwable)
 }

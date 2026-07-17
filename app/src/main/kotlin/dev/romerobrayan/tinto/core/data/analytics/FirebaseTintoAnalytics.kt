@@ -70,6 +70,32 @@ class FirebaseTintoAnalytics @Inject constructor() : TintoAnalytics {
         analytics.logEvent("reminder_paid", bundleOf("recurrence" to recurrence))
     }
 
+    override fun logCapturePermissionGranted() {
+        analytics.logEvent("capture_permission_granted", null)
+    }
+
+    override fun logCaptureDetected(channel: String, issuer: String) {
+        analytics.logEvent(
+            "capture_detected",
+            bundleOf(
+                "channel" to channel,
+                "issuer" to issuer,
+            ),
+        )
+    }
+
+    override fun logPendingConfirmed() {
+        analytics.logEvent("pending_confirmed", null)
+    }
+
+    override fun logPendingDiscarded() {
+        analytics.logEvent("pending_discarded", null)
+    }
+
+    override fun logPendingDuplicateShown() {
+        analytics.logEvent("pending_duplicate_shown", null)
+    }
+
     override fun recordError(error: Throwable) {
         crashlytics.recordException(error)
     }

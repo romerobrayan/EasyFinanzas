@@ -2,6 +2,12 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android">
 
     <uses-permission android:name="android.permission.INTERNET" />
+    <!-- Automatic capture (Sprint 3): both are gated on the in-app opt-in —
+         nothing is read before the user enables capture. READ_SMS is
+         Play-restricted; this is a personally-sideloaded build (see
+         TASK_SPRINT_3_CAPTURE.md). -->
+    <uses-permission android:name="android.permission.RECEIVE_SMS" />
+    <uses-permission android:name="android.permission.READ_SMS" />
 
     <application
         android:name=".TintoApplication"
@@ -21,5 +27,17 @@
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
+
+        <!-- Live SMS capture. Exported is required for the system broadcast;
+             android:permission limits senders to the platform itself. The
+             receiver additionally bails out unless the user opted in. -->
+        <receiver
+            android:name=".core.data.capture.SmsCaptureReceiver"
+            android:exported="true"
+            android:permission="android.permission.BROADCAST_SMS">
+            <intent-filter>
+                <action android:name="android.provider.Telephony.SMS_RECEIVED" />
+            </intent-filter>
+        </receiver>
     </application>
 </manifest>
