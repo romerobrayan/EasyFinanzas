@@ -8,6 +8,11 @@
          TASK_SPRINT_3_CAPTURE.md). -->
     <uses-permission android:name="android.permission.RECEIVE_SMS" />
     <uses-permission android:name="android.permission.READ_SMS" />
+    <!-- SMS capture is an optional feature: the app must stay installable on
+         devices without telephony (tablets, ChromeOS). -->
+    <uses-feature
+        android:name="android.hardware.telephony"
+        android:required="false" />
 
     <application
         android:name=".TintoApplication"
