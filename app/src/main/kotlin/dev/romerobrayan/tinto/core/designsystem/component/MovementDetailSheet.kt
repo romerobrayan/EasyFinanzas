@@ -177,6 +177,11 @@ private fun DetailRow(
 }
 
 @Composable
+private fun DetailDivider() {
+    HorizontalDivider(thickness = 0.5.dp, color = MaterialTheme.colorScheme.outline)
+}
+
+@Composable
 private fun DetailValue(text: String) {
     Text(
         text = text,
