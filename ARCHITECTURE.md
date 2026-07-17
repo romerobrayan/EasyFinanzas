@@ -6,7 +6,7 @@
 - UI: Jetpack Compose, Material 3 (`androidx.compose.material3`).
 - Architecture: Clean Architecture + MVVM.
 - DI: Hilt.
-- Persistence: Cloud Firestore, one subtree per account (`users/{uid}/…`), with the SDK's offline cache so the app works without connectivity. Auth: Firebase Auth (Google, via Credential Manager). A Room staging layer may still appear in the capture sprints (`pending_transactions`).
+- Persistence: Cloud Firestore, one subtree per account (`users/{uid}/…`), with the SDK's offline cache so the app works without connectivity. Auth: Firebase Auth (Google, via Credential Manager). The Room staging layer landed in Sprint 3: a device-local `pending_transactions` table plus a `capture_seen` dedupe index (`core/data/local`), used ONLY for capture staging — it is deliberately outside the `Synced*`/`InMemory*` session split and never replicated to Firestore.
 - Backend services: Firebase Analytics + Crashlytics behind the `TintoAnalytics` interface in `core/common`.
 - Navigation: Navigation Compose (type-safe routes).
 - Charts: Compose-native custom chart (draw with `Canvas` / `drawScope`) — do **not** pull a heavy third-party chart lib for a simple bar chart; the design demands custom styling anyway. Vico is an acceptable fallback only if the custom implementation becomes a time sink.
@@ -123,13 +123,20 @@ NotificationListenerService / SMS ContentProvider / Gmail
         │
         ▼
    TransactionParser        extracts amount, bank, last4, direction (debit/credit)
-        │                   using per-issuer regex rule sets (Bancolombia, Nequi, …)
+        │                   using per-issuer regex rule sets (Bancolombia, 1CERO1, …)
         ▼
-   pending_transactions     (Room) — staged, awaiting user confirmation
+   pending_transactions     (Room, device-local) — staged, awaiting user confirmation
         │  user reviews + assigns category
         ▼
-   transactions             (Room) — committed ledger
+   TransactionRepository    session-routed committed ledger (Firestore / in-memory)
 ```
+
+Shipped in Sprint 3 for SMS: `SmsCaptureReceiver` (live) + `SmsCaptureSource`
+(bounded backfill) feed `CapturePipeline`, which parses with
+`RuleBasedTransactionParser` (rule sets in `TintoIssuerRules`), dedupes on a
+sender+body hash (`capture_seen`), and stages into `pending_transactions`.
+Confirming in the pending inbox promotes through the existing session-routed
+`TransactionRepository` with `source = SMS` preserved.
 
 Notes:
 - Parser rule sets are data, not code branches — keep them in a structured, extensible form so adding a new bank is adding a rule, not editing a `when`. (Detailed message-filtering rules are designed in the backend/capture discussion, per the roadmap.)

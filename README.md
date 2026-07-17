@@ -11,7 +11,7 @@ notifications and Gmail.
 UI language is Spanish (es-CO); amounts are Colombian pesos handled as
 integer minor units end to end.
 
-## Status — Sprint 1: UI shell ✅ · Sprint 1.5: Firebase ✅ · Sprint 2: CRUD ✅
+## Status — Sprint 1: UI shell ✅ · Sprint 1.5: Firebase ✅ · Sprint 2: CRUD ✅ · Sprint 3: SMS capture ✅
 
 The complete visual shell plus the Firebase backbone: Google sign-in
 (Credential Manager), per-user Cloud Firestore persistence with offline
@@ -24,6 +24,13 @@ with edit and delete, card management in Perfil, and payment reminders
 with create/edit/delete and a recurrence-aware "mark as paid" (one-off
 reminders complete; weekly/monthly/yearly ones reschedule). Everything
 behaves identically in demo mode and signed in.
+
+Sprint 3 brings automatic capture, SMS first: bank messages from
+Bancolombia and the 1CERO1 work card are parsed on-device (live receive
+plus a 90-day backfill after an explicit opt-in) and staged in a local
+Room inbox — the dashboard announces "Detectamos N movimientos" and every
+item is reviewed, categorized and confirmed (or discarded) by hand before
+it touches the ledger. Raw SMS text never leaves the phone.
 
 ## Stack
 
@@ -44,7 +51,7 @@ Architecture + MVVM, package by feature.
 | [CLAUDE.md](CLAUDE.md) | Working agreements for AI-assisted development |
 | [TASK_SPRINT_1_UI_SHELL.md](TASK_SPRINT_1_UI_SHELL.md) | The Sprint 1 brief |
 | [TASK_SPRINT_2_CRUD.md](TASK_SPRINT_2_CRUD.md) | The Sprint 2 brief |
-| [TASK_SPRINT_3_CAPTURE.md](TASK_SPRINT_3_CAPTURE.md) | The Sprint 3 brief (planning) |
+| [TASK_SPRINT_3_CAPTURE.md](TASK_SPRINT_3_CAPTURE.md) | The Sprint 3 brief |
 
 ## Build
 
