@@ -45,6 +45,7 @@ Architecture + MVVM, package by feature.
 | [TASK_SPRINT_1_UI_SHELL.md](TASK_SPRINT_1_UI_SHELL.md) | The Sprint 1 brief |
 | [TASK_SPRINT_2_CRUD.md](TASK_SPRINT_2_CRUD.md) | The Sprint 2 brief |
 | [TASK_SPRINT_3_CAPTURE.md](TASK_SPRINT_3_CAPTURE.md) | The Sprint 3 brief (planning) |
+| [TASK_REMINDER_NOTIFICATIONS.md](TASK_REMINDER_NOTIFICATIONS.md) | Backlog brief: local reminder notifications (after Sprint 3) |
 
 ## Build
 
