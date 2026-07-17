@@ -44,6 +44,7 @@ Architecture + MVVM, package by feature.
 | [CLAUDE.md](CLAUDE.md) | Working agreements for AI-assisted development |
 | [TASK_SPRINT_1_UI_SHELL.md](TASK_SPRINT_1_UI_SHELL.md) | The Sprint 1 brief |
 | [TASK_SPRINT_2_CRUD.md](TASK_SPRINT_2_CRUD.md) | The Sprint 2 brief |
+| [TASK_SPRINT_3_CAPTURE.md](TASK_SPRINT_3_CAPTURE.md) | The Sprint 3 brief (planning) |
 
 ## Build
 

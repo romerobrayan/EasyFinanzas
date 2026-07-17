@@ -18,11 +18,15 @@ Operating manual for Claude Code on this repository. Read `PROJECT_CONTEXT.md`, 
 - `app/google-services.json` in the repo may be the placeholder; real console setup steps live in `FIREBASE_SETUP.md`. `app/debug.keystore` is committed on purpose (shared debug signature for local + CI so the registered SHA-1 stays valid).
 - Firestore security rules: `firestore.rules` (per-user isolation).
 
+## Current sprint — Sprint 3: automatic capture (SMS first)
+
+**The brief is `TASK_SPRINT_3_CAPTURE.md` — read it before writing code.** In short: read bank SMS (Bancolombia + the 1CERO1 work card) via a `RECEIVE_SMS` receiver plus a bounded `READ_SMS` backfill; parse them with data-driven, per-issuer rule sets (dual amount-separator conventions, three date layouts, expense/income direction, last-4 card match); stage every parse in a device-local `pending_transactions` store; and review/confirm/discard them in a pending inbox before anything reaches the ledger. **Never auto-commit a parse.** `NotificationListenerService` (Nu) and Gmail are scaffolded seams only — later sprints.
+
 ## Previous sprint — Sprint 2: real-account CRUD (done)
 
 Brief: `TASK_SPRINT_2_CRUD.md`. Delivered: movement detail bottom sheet (`core/designsystem/component/MovementDetailSheet.kt`) with edit (add-transaction screen in edit mode via `AddTransactionRoute(transactionId)`) and delete; card CRUD in Perfil (`feature/profile/CardFormSheet.kt`); reminders create/edit/delete/mark-paid (`feature/reminders/ReminderFormSheet.kt`) with the recurrence rollover as a pure function in `core/domain/usecase/ReminderRollover.kt` (unit-tested, month-end clamping pinned). All CRUD routes by session through the `Synced*`/`InMemory*` repositories — identical behavior demo vs signed-in; Firestore writes stay fire-and-forget. Shared form primitives extracted to `core/designsystem/component` (`TintoSelectorPill`, `TintoDatePickerDialog`, `TintoConfirmDialog`, `tintoTextFieldColors`).
 
-## Previous sprint — Sprint 1: UI shell
+## Earlier sprint — Sprint 1: UI shell
 
 **Build the complete visual shell wired to in-memory mock data. No Room, no capture, no permissions this sprint.** Deliverable: a navigable, on-brand app that can be clicked through end to end.
 
