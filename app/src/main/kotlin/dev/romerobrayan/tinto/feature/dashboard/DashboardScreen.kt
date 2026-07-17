@@ -15,6 +15,7 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.outlined.Sms
 import androidx.compose.material.icons.rounded.ArrowDownward
 import androidx.compose.material.icons.rounded.ArrowUpward
 import androidx.compose.material3.HorizontalDivider
@@ -29,6 +30,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
@@ -42,6 +44,7 @@ import dev.romerobrayan.tinto.core.designsystem.component.MovementDetailSheet
 import dev.romerobrayan.tinto.core.designsystem.component.PeriodSelector
 import dev.romerobrayan.tinto.core.designsystem.component.StatementRow
 import dev.romerobrayan.tinto.core.designsystem.component.TintoBarChart
+import dev.romerobrayan.tinto.core.designsystem.theme.CardShape
 import dev.romerobrayan.tinto.core.designsystem.theme.LocalTintoColors
 import dev.romerobrayan.tinto.core.designsystem.theme.LocalTintoTypography
 import dev.romerobrayan.tinto.core.designsystem.theme.PillShape
@@ -51,6 +54,7 @@ import dev.romerobrayan.tinto.core.domain.model.Period
 fun DashboardScreen(
     onSeeAll: () -> Unit,
     onEditMovement: (String) -> Unit,
+    onReviewPending: () -> Unit,
     modifier: Modifier = Modifier,
     viewModel: DashboardViewModel = hiltViewModel(),
 ) {
@@ -63,6 +67,7 @@ fun DashboardScreen(
         onSeeAll = onSeeAll,
         onEditMovement = onEditMovement,
         onDeleteMovement = viewModel::onDeleteMovement,
+        onReviewPending = onReviewPending,
         modifier = modifier,
     )
 }
@@ -76,6 +81,7 @@ private fun DashboardContent(
     onSeeAll: () -> Unit,
     onEditMovement: (String) -> Unit,
     onDeleteMovement: (String) -> Unit,
+    onReviewPending: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
     val type = LocalTintoTypography.current
@@ -95,6 +101,11 @@ private fun DashboardContent(
             style = type.screenTitle,
             color = MaterialTheme.colorScheme.onBackground,
         )
+
+        if (state.pendingCount > 0) {
+            Spacer(Modifier.height(16.dp))
+            PendingCaptureBanner(count = state.pendingCount, onReview = onReviewPending)
+        }
 
         Spacer(Modifier.height(16.dp))
         MonthSelector(label = state.monthLabel, onClick = { showMonthSheet = true })
@@ -194,6 +205,46 @@ private fun DashboardContent(
                 onDeleteMovement(selectedMovement.id)
             },
             onDismiss = { selectedMovementId = null },
+        )
+    }
+}
+
+/**
+ * "Detectamos N movimientos nuevos" — the inbox entry point. Captures are
+ * phrased as detections pending review, never surfaced as raw parser output
+ * (DESIGN_SYSTEM.md voice).
+ */
+@Composable
+private fun PendingCaptureBanner(count: Int, onReview: () -> Unit) {
+    val type = LocalTintoTypography.current
+    val tinto = LocalTintoColors.current
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .clip(CardShape)
+            .background(MaterialTheme.colorScheme.surfaceVariant)
+            .clickable(onClick = onReview)
+            .padding(14.dp),
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
+        Icon(
+            imageVector = Icons.Outlined.Sms,
+            contentDescription = null,
+            tint = tinto.gold,
+            modifier = Modifier.size(22.dp),
+        )
+        Spacer(Modifier.width(12.dp))
+        Text(
+            text = pluralStringResource(R.plurals.pending_banner_title, count, count),
+            style = type.body.copy(fontWeight = FontWeight.Medium),
+            color = MaterialTheme.colorScheme.onBackground,
+            modifier = Modifier.weight(1f),
+        )
+        Spacer(Modifier.width(12.dp))
+        Text(
+            text = stringResource(R.string.pending_banner_action),
+            style = type.body.copy(fontWeight = FontWeight.Medium),
+            color = tinto.gold,
         )
     }
 }

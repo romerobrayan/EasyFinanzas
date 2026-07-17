@@ -50,7 +50,7 @@ fun Transaction.toMovementUi(
         isCash = method == PaymentMethod.CASH,
         amount = amount,
         type = type,
-        // TODO(sprint-3): replace with real recurrence detection; mock-driven for now.
+        // TODO(sprint-4): replace with real recurrence detection; mock-driven for now.
         isRecurring = merchant != null && merchant in recurringMerchants,
         date = occurredAt.toLocalDateTime(timeZone).date,
         merchant = merchant,

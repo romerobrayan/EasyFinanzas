@@ -19,3 +19,11 @@ data object RemindersRoute
 
 @Serializable
 data object ProfileRoute
+
+/** Pending-capture inbox: review, confirm or discard detected movements. */
+@Serializable
+data object PendingRoute
+
+/** Automatic-capture explainer + SMS permission opt-in. */
+@Serializable
+data object CaptureSetupRoute

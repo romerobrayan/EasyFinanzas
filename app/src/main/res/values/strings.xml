@@ -135,6 +135,34 @@
     <string name="profile_exit_demo">Salir de la demo</string>
     <string name="profile_demo_badge">Modo demo</string>
 
+    <!-- Pending capture inbox -->
+    <plurals name="pending_banner_title">
+        <item quantity="one">Detectamos %1$d movimiento nuevo</item>
+        <item quantity="other">Detectamos %1$d movimientos nuevos</item>
+    </plurals>
+    <string name="pending_banner_action">Revisar</string>
+    <string name="pending_title">Movimientos detectados</string>
+    <string name="pending_empty">No hay movimientos por revisar</string>
+    <string name="pending_no_card">Sin tarjeta</string>
+    <string name="pending_original_message">Mensaje original</string>
+    <string name="pending_duplicate_badge">Posible duplicado</string>
+    <string name="pending_duplicate_hint">Ya hay un movimiento por el mismo monto casi a la misma hora. Si es el mismo, descarta este.</string>
+    <string name="action_confirm">Confirmar</string>
+    <string name="action_discard">Descartar</string>
+
+    <!-- Automatic capture setup -->
+    <string name="capture_setup_title">Captura automática</string>
+    <string name="capture_setup_intro">Tinto puede leer los SMS de tus bancos y convertirlos en movimientos pendientes de revisión. Nada llega a tu historial sin tu confirmación.</string>
+    <string name="capture_setup_bullet_detect">Solo leemos mensajes de remitentes bancarios conocidos (Bancolombia y 1CERO1). Al activar, también revisamos los últimos 90 días.</string>
+    <string name="capture_setup_bullet_local">Los mensajes se procesan únicamente en tu teléfono: el texto original nunca se sube a la nube.</string>
+    <string name="capture_setup_bullet_personal">El permiso de SMS está restringido en Play Store; esta es una compilación personal instalada manualmente.</string>
+    <string name="capture_enable">Activar captura SMS</string>
+    <string name="capture_disable">Desactivar captura</string>
+    <string name="capture_status_on">Activada</string>
+    <string name="capture_status_configure">Configurar</string>
+    <string name="capture_permission_denied">Sin el permiso de SMS no podemos detectar movimientos. Puedes activarlo cuando quieras.</string>
+    <string name="capture_card_tip">Consejo: registra tu cuenta Bancolombia como una tarjeta con sus últimos 4 dígitos (por ejemplo 5005) para que los movimientos detectados se asocien automáticamente.</string>
+
     <!-- Shared -->
     <string name="recurring_badge">recurrente</string>
     <string name="date_today">Hoy</string>

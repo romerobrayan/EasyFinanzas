@@ -8,6 +8,7 @@ import dev.romerobrayan.tinto.core.common.TintoAnalytics
 import dev.romerobrayan.tinto.core.domain.model.Card
 import dev.romerobrayan.tinto.core.domain.model.UserSession
 import dev.romerobrayan.tinto.core.domain.repository.AuthRepository
+import dev.romerobrayan.tinto.core.domain.repository.CaptureSettingsRepository
 import dev.romerobrayan.tinto.core.domain.repository.CardRepository
 import java.util.UUID
 import javax.inject.Inject
@@ -24,6 +25,7 @@ class ProfileViewModel @Inject constructor(
     private val authRepository: AuthRepository,
     private val analytics: TintoAnalytics,
     private val cardRepository: CardRepository,
+    captureSettings: CaptureSettingsRepository,
 ) : ViewModel() {
 
     private data class CardForm(
@@ -40,8 +42,9 @@ class ProfileViewModel @Inject constructor(
     val uiState: StateFlow<ProfileUiState> = combine(
         authRepository.session,
         cardRepository.observeCards(),
+        captureSettings.smsCaptureEnabled,
         cardForm,
-    ) { session, cards, form ->
+    ) { session, cards, smsEnabled, form ->
         val formUi = form?.let {
             CardFormUiState(
                 editingCardId = it.editingCardId,
@@ -57,6 +60,7 @@ class ProfileViewModel @Inject constructor(
                 userEmail = session.user.email.orEmpty(),
                 cards = cards,
                 isDemo = false,
+                smsCaptureEnabled = smsEnabled,
                 cardForm = formUi,
             )
 
@@ -67,6 +71,7 @@ class ProfileViewModel @Inject constructor(
                 userEmail = MockData.USER_EMAIL,
                 cards = cards,
                 isDemo = true,
+                smsCaptureEnabled = smsEnabled,
                 cardForm = formUi,
             )
         }

@@ -17,6 +17,7 @@ import dev.romerobrayan.tinto.core.domain.model.Period
 import dev.romerobrayan.tinto.core.domain.model.Transaction
 import dev.romerobrayan.tinto.core.domain.repository.CardRepository
 import dev.romerobrayan.tinto.core.domain.repository.CategoryRepository
+import dev.romerobrayan.tinto.core.domain.repository.PendingTransactionRepository
 import dev.romerobrayan.tinto.core.domain.repository.TransactionRepository
 import dev.romerobrayan.tinto.core.domain.usecase.AggregateSpendUseCase
 import dev.romerobrayan.tinto.core.domain.usecase.startOfMonth
@@ -45,6 +46,7 @@ class DashboardViewModel @Inject constructor(
     private val transactionRepository: TransactionRepository,
     categoryRepository: CategoryRepository,
     cardRepository: CardRepository,
+    pendingTransactionRepository: PendingTransactionRepository,
     private val aggregateSpend: AggregateSpendUseCase,
     private val analytics: TintoAnalytics,
 ) : ViewModel() {
@@ -65,9 +67,10 @@ class DashboardViewModel @Inject constructor(
         transactionRepository.observeTransactions(),
         categoryRepository.observeCategories(),
         cardRepository.observeCards(),
+        pendingTransactionRepository.observePending(),
         selection,
-    ) { transactions, categories, cards, currentSelection ->
-        buildState(transactions, categories, cards, currentSelection)
+    ) { transactions, categories, cards, pending, currentSelection ->
+        buildState(transactions, categories, cards, currentSelection, pending.size)
     }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), DashboardUiState())
 
     fun onPeriodSelected(period: Period) {
@@ -96,6 +99,7 @@ class DashboardViewModel @Inject constructor(
         categories: List<Category>,
         cards: List<Card>,
         currentSelection: Selection,
+        pendingCount: Int,
     ): DashboardUiState {
         val dates = transactions.map { it.occurredAt.toLocalDateTime(timeZone).date }
         val latestDate = dates.maxOrNull() ?: Clock.System.todayIn(timeZone)
@@ -149,6 +153,7 @@ class DashboardViewModel @Inject constructor(
         }
 
         return DashboardUiState(
+            pendingCount = pendingCount,
             monthLabel = Dates.monthYearLabel(selectedMonthStart),
             monthOptions = monthOptions,
             selectedMonthKey = selectedMonthStart.toString(),

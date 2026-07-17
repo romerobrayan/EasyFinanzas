@@ -1,10 +1,8 @@
 package dev.romerobrayan.tinto.feature.addtransaction
 
 import androidx.compose.foundation.background
-import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.ExperimentalLayoutApi
 import androidx.compose.foundation.layout.FlowRow
@@ -18,7 +16,6 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
@@ -35,28 +32,22 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.focus.FocusRequester
-import androidx.compose.ui.focus.focusRequester
-import androidx.compose.ui.graphics.SolidColor
 import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.text.TextRange
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
-import androidx.compose.ui.text.input.TextFieldValue
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import dev.romerobrayan.tinto.R
 import dev.romerobrayan.tinto.core.common.Dates
-import dev.romerobrayan.tinto.core.common.MoneyFormat
-import dev.romerobrayan.tinto.core.designsystem.component.CategoryIcon
+import dev.romerobrayan.tinto.core.designsystem.component.TintoAmountField
+import dev.romerobrayan.tinto.core.designsystem.component.TintoCategoryChip
 import dev.romerobrayan.tinto.core.designsystem.component.TintoDatePickerDialog
 import dev.romerobrayan.tinto.core.designsystem.component.TintoSelectorPill
 import dev.romerobrayan.tinto.core.designsystem.component.tintoTextFieldColors
@@ -64,7 +55,6 @@ import dev.romerobrayan.tinto.core.designsystem.theme.ButtonShape
 import dev.romerobrayan.tinto.core.designsystem.theme.LocalTintoColors
 import dev.romerobrayan.tinto.core.designsystem.theme.LocalTintoTypography
 import dev.romerobrayan.tinto.core.designsystem.theme.PillShape
-import dev.romerobrayan.tinto.core.domain.model.Money
 import dev.romerobrayan.tinto.core.domain.model.PaymentMethod
 import dev.romerobrayan.tinto.core.domain.model.TransactionType
 import kotlinx.datetime.LocalDate
@@ -156,7 +146,7 @@ private fun AddTransactionContent(
         }
 
         Spacer(Modifier.height(24.dp))
-        AmountField(
+        TintoAmountField(
             amountDigits = state.amountDigits,
             onAmountChanged = onAmountChanged,
         )
@@ -225,7 +215,7 @@ private fun AddTransactionContent(
             verticalArrangement = Arrangement.spacedBy(8.dp),
         ) {
             state.categories.forEach { category ->
-                CategoryChip(
+                TintoCategoryChip(
                     name = category.name,
                     iconKey = category.iconKey,
                     colorHex = category.colorHex,
@@ -317,89 +307,6 @@ private fun AddTransactionContent(
                 showDatePicker = false
             },
             onDismiss = { showDatePicker = false },
-        )
-    }
-}
-
-/** Keypad-first amount entry rendered through the app money format. */
-@Composable
-private fun AmountField(
-    amountDigits: String,
-    onAmountChanged: (String) -> Unit,
-) {
-    val type = LocalTintoTypography.current
-    val tinto = LocalTintoColors.current
-    val focusRequester = remember { FocusRequester() }
-    val formatted = if (amountDigits.isEmpty()) {
-        ""
-    } else {
-        MoneyFormat.format(Money.ofPesos(amountDigits.toLong()))
-    }
-
-    LaunchedEffect(Unit) {
-        focusRequester.requestFocus()
-    }
-
-    BasicTextField(
-        value = TextFieldValue(text = formatted, selection = TextRange(formatted.length)),
-        onValueChange = { onAmountChanged(it.text) },
-        textStyle = type.moneyHero.copy(
-            color = MaterialTheme.colorScheme.onBackground,
-            textAlign = TextAlign.Center,
-        ),
-        cursorBrush = SolidColor(tinto.gold),
-        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
-        singleLine = true,
-        modifier = Modifier
-            .fillMaxWidth()
-            .focusRequester(focusRequester),
-        decorationBox = { innerTextField ->
-            Box(contentAlignment = Alignment.Center) {
-                if (formatted.isEmpty()) {
-                    Text(
-                        text = stringResource(R.string.add_amount_placeholder),
-                        style = type.moneyHero,
-                        color = tinto.muted,
-                    )
-                }
-                innerTextField()
-            }
-        },
-    )
-}
-
-@Composable
-private fun CategoryChip(
-    name: String,
-    iconKey: String,
-    colorHex: String,
-    selected: Boolean,
-    onClick: () -> Unit,
-) {
-    val tinto = LocalTintoColors.current
-    Row(
-        modifier = Modifier
-            .clip(PillShape)
-            .background(MaterialTheme.colorScheme.surfaceVariant)
-            .border(
-                width = if (selected) 1.dp else 0.5.dp,
-                color = if (selected) tinto.gold else MaterialTheme.colorScheme.outline,
-                shape = PillShape,
-            )
-            .clickable(onClick = onClick)
-            .padding(start = 6.dp, top = 6.dp, end = 12.dp, bottom = 6.dp),
-        verticalAlignment = Alignment.CenterVertically,
-    ) {
-        CategoryIcon(iconKey = iconKey, colorHex = colorHex, size = 24.dp)
-        Spacer(Modifier.width(8.dp))
-        Text(
-            text = name,
-            style = LocalTintoTypography.current.caption,
-            color = if (selected) {
-                MaterialTheme.colorScheme.onBackground
-            } else {
-                MaterialTheme.colorScheme.onSurfaceVariant
-            },
         )
     }
 }

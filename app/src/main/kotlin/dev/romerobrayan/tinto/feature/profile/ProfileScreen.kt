@@ -49,6 +49,7 @@ import dev.romerobrayan.tinto.core.domain.model.Card
 
 @Composable
 fun ProfileScreen(
+    onOpenCaptureSetup: () -> Unit,
     modifier: Modifier = Modifier,
     viewModel: ProfileViewModel = hiltViewModel(),
 ) {
@@ -58,6 +59,7 @@ fun ProfileScreen(
         onSignOut = viewModel::onSignOut,
         onAddCardClick = viewModel::onAddCardClick,
         onCardClick = viewModel::onCardClick,
+        onOpenCaptureSetup = onOpenCaptureSetup,
         modifier = modifier,
     )
 
@@ -80,6 +82,7 @@ private fun ProfileContent(
     onSignOut: () -> Unit,
     onAddCardClick: () -> Unit,
     onCardClick: (Card) -> Unit,
+    onOpenCaptureSetup: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
     val type = LocalTintoTypography.current
@@ -240,7 +243,7 @@ private fun ProfileContent(
                 .clip(ButtonShape)
                 .background(MaterialTheme.colorScheme.surfaceVariant)
                 .clickable {
-                    // TODO(sprint-3): real JSON export via the Storage Access Framework.
+                    // TODO(sprint-4): real JSON export via the Storage Access Framework.
                 }
                 .padding(14.dp),
             verticalAlignment = Alignment.CenterVertically,
@@ -274,12 +277,27 @@ private fun ProfileContent(
             color = MaterialTheme.colorScheme.onBackground,
         )
         Spacer(Modifier.height(4.dp))
-        // Placeholder for the Sprint-3 capture onboarding (permissions live there).
-        PermissionRow(Icons.Outlined.NotificationsNone, stringResource(R.string.profile_perm_notifications))
+        // Notifications (Nu) and Gmail are scaffolded seams — later sprints.
+        PermissionRow(
+            icon = Icons.Outlined.NotificationsNone,
+            label = stringResource(R.string.profile_perm_notifications),
+            statusLabel = stringResource(R.string.profile_perm_soon),
+        )
         HorizontalDivider(thickness = 0.5.dp, color = MaterialTheme.colorScheme.outline)
-        PermissionRow(Icons.Outlined.Sms, stringResource(R.string.profile_perm_sms))
+        PermissionRow(
+            icon = Icons.Outlined.Sms,
+            label = stringResource(R.string.profile_perm_sms),
+            statusLabel = stringResource(
+                if (state.smsCaptureEnabled) R.string.capture_status_on else R.string.capture_status_configure,
+            ),
+            onClick = onOpenCaptureSetup,
+        )
         HorizontalDivider(thickness = 0.5.dp, color = MaterialTheme.colorScheme.outline)
-        PermissionRow(Icons.Outlined.Email, stringResource(R.string.profile_perm_gmail))
+        PermissionRow(
+            icon = Icons.Outlined.Email,
+            label = stringResource(R.string.profile_perm_gmail),
+            statusLabel = stringResource(R.string.profile_perm_soon),
+        )
 
         Spacer(Modifier.height(28.dp))
         Text(
@@ -328,11 +346,17 @@ private fun ProfileContent(
 }
 
 @Composable
-private fun PermissionRow(icon: ImageVector, label: String) {
+private fun PermissionRow(
+    icon: ImageVector,
+    label: String,
+    statusLabel: String,
+    onClick: (() -> Unit)? = null,
+) {
     val type = LocalTintoTypography.current
     Row(
         modifier = Modifier
             .fillMaxWidth()
+            .then(if (onClick != null) Modifier.clickable(onClick = onClick) else Modifier)
             .padding(vertical = 12.dp),
         verticalAlignment = Alignment.CenterVertically,
     ) {
@@ -356,7 +380,7 @@ private fun PermissionRow(icon: ImageVector, label: String) {
                 .padding(horizontal = 10.dp, vertical = 3.dp),
         ) {
             Text(
-                text = stringResource(R.string.profile_perm_soon),
+                text = statusLabel,
                 style = type.meta,
                 color = LocalTintoColors.current.gold,
             )

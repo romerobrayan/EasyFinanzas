@@ -7,6 +7,8 @@ import dev.romerobrayan.tinto.core.domain.model.Money
 import dev.romerobrayan.tinto.core.domain.model.Period
 
 data class DashboardUiState(
+    /** Captures staged in the pending inbox — drives the "Detectamos N" banner. */
+    val pendingCount: Int = 0,
     val monthLabel: String = "",
     val monthOptions: List<MonthOption> = emptyList(),
     val selectedMonthKey: String = "",

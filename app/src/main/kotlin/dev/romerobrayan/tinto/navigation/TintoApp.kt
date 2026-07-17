@@ -15,8 +15,10 @@ import androidx.navigation.compose.rememberNavController
 import dev.romerobrayan.tinto.core.designsystem.component.TintoScaffold
 import dev.romerobrayan.tinto.core.designsystem.component.TintoTab
 import dev.romerobrayan.tinto.feature.addtransaction.AddTransactionScreen
+import dev.romerobrayan.tinto.feature.capture.CaptureSetupScreen
 import dev.romerobrayan.tinto.feature.dashboard.DashboardScreen
 import dev.romerobrayan.tinto.feature.movements.MovementsScreen
+import dev.romerobrayan.tinto.feature.pending.PendingReviewScreen
 import dev.romerobrayan.tinto.feature.profile.ProfileScreen
 import dev.romerobrayan.tinto.feature.reminders.RemindersScreen
 
@@ -48,6 +50,8 @@ fun TintoApp(onScreenView: (String) -> Unit = {}) {
         currentDestination.hasRoute<AddTransactionRoute>() -> "add_transaction"
         currentDestination.hasRoute<RemindersRoute>() -> "reminders"
         currentDestination.hasRoute<ProfileRoute>() -> "profile"
+        currentDestination.hasRoute<PendingRoute>() -> "pending_review"
+        currentDestination.hasRoute<CaptureSetupRoute>() -> "capture_setup"
         else -> null
     }
     LaunchedEffect(screenName) {
@@ -72,6 +76,7 @@ fun TintoApp(onScreenView: (String) -> Unit = {}) {
                 DashboardScreen(
                     onSeeAll = { navController.navigateToTab(TintoTab.MOVEMENTS) },
                     onEditMovement = onEditMovement,
+                    onReviewPending = { navController.navigate(PendingRoute) },
                 )
             }
             composable<MovementsRoute> {
@@ -84,7 +89,15 @@ fun TintoApp(onScreenView: (String) -> Unit = {}) {
                 RemindersScreen()
             }
             composable<ProfileRoute> {
-                ProfileScreen()
+                ProfileScreen(
+                    onOpenCaptureSetup = { navController.navigate(CaptureSetupRoute) },
+                )
+            }
+            composable<PendingRoute> {
+                PendingReviewScreen(onClose = { navController.popBackStack() })
+            }
+            composable<CaptureSetupRoute> {
+                CaptureSetupScreen(onClose = { navController.popBackStack() })
             }
         }
     }
