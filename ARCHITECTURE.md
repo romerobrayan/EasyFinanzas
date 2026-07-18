@@ -6,7 +6,7 @@
 - UI: Jetpack Compose, Material 3 (`androidx.compose.material3`).
 - Architecture: Clean Architecture + MVVM.
 - DI: Hilt.
-- Persistence: Cloud Firestore, one subtree per account (`users/{uid}/…`), with the SDK's offline cache so the app works without connectivity. Auth: Firebase Auth (Google, via Credential Manager). A Room staging layer may still appear in the capture sprints (`pending_transactions`).
+- Persistence: Cloud Firestore, one subtree per account (`users/{uid}/…`), with the SDK's offline cache so the app works without connectivity. Auth: Firebase Auth (Google, via Credential Manager). The Room staging layer landed in Sprint 3: a device-local `pending_transactions` table (the only Room table — the committed ledger stays in Firestore) holding captured parses until the user confirms or discards them.
 - Backend services: Firebase Analytics + Crashlytics behind the `TintoAnalytics` interface in `core/common`.
 - Navigation: Navigation Compose (type-safe routes).
 - Charts: Compose-native custom chart (draw with `Canvas` / `drawScope`) — do **not** pull a heavy third-party chart lib for a simple bar chart; the design demands custom styling anyway. Vico is an acceptable fallback only if the custom implementation becomes a time sink.
