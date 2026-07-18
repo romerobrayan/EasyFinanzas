@@ -55,6 +55,22 @@ knows how to stage, dedupe, and review.
 Everything a parse produces still lands in the **pending inbox** for user review —
 a bad parse must never silently reach the ledger (`CLAUDE.md` guardrail).
 
+### Sequencing — notifications first, then Gmail (decided)
+
+The sprint ships in two phases, in this order:
+
+1. **Phase 1 — Nu notifications (Channel A).** Land and test the live
+   `NotificationListenerService` path end to end first: it's the smaller, fully
+   pre-specified change (formats already documented), and it exercises the
+   `CaptureChannel.NOTIFICATION` seam without any new OAuth surface.
+2. **Phase 2 — Gmail (Channel B).** Start only once notifications are verified on
+   the device. Gmail carries the new subsystems (OAuth scope, fetch, HTML→text)
+   **and** depends on collecting real email fixtures (Workstream B4), so it's the
+   riskier half — sequencing it second keeps Phase 1 shippable on its own.
+
+Each phase is independently mergeable; Phase 1 is a complete deliverable even if
+Gmail slips.
+
 ## Scope at a glance
 
 **In:** Nu notification capture (live `NotificationListenerService` behind the
@@ -278,9 +294,9 @@ JSON-export changes, iOS.
 3. **Gmail scope approval** — does the personal build's OAuth consent need the
    sensitive `gmail.readonly` scope added as a test user, or is verification
    required? (Testing users should suffice for a sideloaded personal app.)
-4. **Email fixtures availability** — B4 is a hard prerequisite for B3. If the user
-   can't supply real sample emails this sprint, ship Nu notifications alone and
-   carry Gmail to a follow-up.
+4. **Email fixtures availability** — B4 is a hard prerequisite for B3 (Phase 2).
+   Collect the real sample emails once Phase 1 (notifications) is verified; if they
+   can't be supplied, Phase 1 already stands alone as a shippable deliverable.
 5. **HTML email parsing** — a lightweight AndroidX/first-party HTML→text approach
    (e.g. `Html.fromHtml` + cleanup) vs adding a parser dependency. Prefer no new
    dependency; justify in the commit if one is genuinely warranted
