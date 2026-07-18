@@ -1,5 +1,10 @@
 package dev.romerobrayan.tinto.feature.reminders
 
+import android.Manifest
+import android.content.pm.PackageManager
+import android.os.Build
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Box
@@ -22,10 +27,15 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
@@ -33,8 +43,10 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import androidx.core.content.ContextCompat
 import dev.romerobrayan.tinto.R
 import dev.romerobrayan.tinto.core.designsystem.component.MoneyText
+import dev.romerobrayan.tinto.core.designsystem.component.TintoConfirmDialog
 import dev.romerobrayan.tinto.core.designsystem.theme.LocalTintoColors
 import dev.romerobrayan.tinto.core.designsystem.theme.LocalTintoTypography
 import dev.romerobrayan.tinto.core.designsystem.theme.PillShape
@@ -46,12 +58,55 @@ fun RemindersScreen(
     viewModel: RemindersViewModel = hiltViewModel(),
 ) {
     val state by viewModel.uiState.collectAsStateWithLifecycle()
+    val context = LocalContext.current
+    var showNotificationExplainer by rememberSaveable { mutableStateOf(false) }
+    var notificationAskDone by rememberSaveable { mutableStateOf(false) }
+
+    // Runtime-permission platform call — the screen owns the launcher (same
+    // exception as the login credential picker). Declining degrades
+    // gracefully: reminders keep working, they just don't alert.
+    val notificationPermissionLauncher = rememberLauncherForActivityResult(
+        ActivityResultContracts.RequestPermission(),
+    ) { }
+
+    // In-context ask: the first time a reminder is saved, not at app launch.
+    LaunchedEffect(viewModel) {
+        viewModel.saved.collect {
+            val needsPermission = Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU &&
+                ContextCompat.checkSelfPermission(context, Manifest.permission.POST_NOTIFICATIONS) !=
+                PackageManager.PERMISSION_GRANTED
+            if (needsPermission && !notificationAskDone) {
+                showNotificationExplainer = true
+            }
+        }
+    }
+
     RemindersContent(
         state = state,
         onAddClick = viewModel::onAddClick,
         onReminderClick = viewModel::onReminderClick,
         modifier = modifier,
     )
+
+    if (showNotificationExplainer) {
+        TintoConfirmDialog(
+            title = stringResource(R.string.reminder_permission_title),
+            message = stringResource(R.string.reminder_permission_message),
+            confirmLabel = stringResource(R.string.reminder_permission_allow),
+            onConfirm = {
+                showNotificationExplainer = false
+                notificationAskDone = true
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+                    notificationPermissionLauncher.launch(Manifest.permission.POST_NOTIFICATIONS)
+                }
+            },
+            onDismiss = {
+                showNotificationExplainer = false
+                notificationAskDone = true
+            },
+            destructive = false,
+        )
+    }
 
     state.form?.let { form ->
         ReminderFormSheet(

@@ -18,6 +18,7 @@ import dev.romerobrayan.tinto.core.domain.model.Transaction
 import dev.romerobrayan.tinto.core.domain.model.TransactionType
 import dev.romerobrayan.tinto.core.domain.repository.CardRepository
 import dev.romerobrayan.tinto.core.domain.repository.CategoryRepository
+import dev.romerobrayan.tinto.core.domain.repository.PendingTransactionRepository
 import dev.romerobrayan.tinto.core.domain.repository.TransactionRepository
 import dev.romerobrayan.tinto.core.domain.usecase.AggregateSpendUseCase
 import dev.romerobrayan.tinto.core.domain.usecase.startOfMonth
@@ -29,6 +30,7 @@ import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
@@ -46,6 +48,7 @@ class DashboardViewModel @Inject constructor(
     private val transactionRepository: TransactionRepository,
     categoryRepository: CategoryRepository,
     cardRepository: CardRepository,
+    pendingTransactionRepository: PendingTransactionRepository,
     private val aggregateSpend: AggregateSpendUseCase,
     private val analytics: TintoAnalytics,
 ) : ViewModel() {
@@ -67,9 +70,10 @@ class DashboardViewModel @Inject constructor(
         transactionRepository.observeTransactions(),
         categoryRepository.observeCategories(),
         cardRepository.observeCards(),
+        pendingTransactionRepository.observePending().map { it.size },
         selection,
-    ) { transactions, categories, cards, currentSelection ->
-        buildState(transactions, categories, cards, currentSelection)
+    ) { transactions, categories, cards, pendingCount, currentSelection ->
+        buildState(transactions, categories, cards, currentSelection).copy(pendingCount = pendingCount)
     }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), DashboardUiState())
 
     fun onPeriodSelected(period: Period) {

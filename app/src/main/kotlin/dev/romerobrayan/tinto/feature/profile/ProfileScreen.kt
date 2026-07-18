@@ -1,5 +1,8 @@
 package dev.romerobrayan.tinto.feature.profile
 
+import android.Manifest
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Box
@@ -29,6 +32,9 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -40,6 +46,7 @@ import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import dev.romerobrayan.tinto.R
+import dev.romerobrayan.tinto.core.designsystem.component.TintoConfirmDialog
 import dev.romerobrayan.tinto.core.designsystem.theme.ButtonShape
 import dev.romerobrayan.tinto.core.designsystem.theme.LocalTintoColors
 import dev.romerobrayan.tinto.core.designsystem.theme.LocalTintoTypography
@@ -53,13 +60,63 @@ fun ProfileScreen(
     viewModel: ProfileViewModel = hiltViewModel(),
 ) {
     val state by viewModel.uiState.collectAsStateWithLifecycle()
+    var showCaptureExplainer by rememberSaveable { mutableStateOf(false) }
+    var showCaptureDisableConfirm by rememberSaveable { mutableStateOf(false) }
+
+    // Platform-call exception (like the login credential picker): the runtime
+    // permission prompt needs the Activity, so the screen owns the launcher
+    // and only reports the grant to the ViewModel.
+    val smsPermissionLauncher = rememberLauncherForActivityResult(
+        ActivityResultContracts.RequestMultiplePermissions(),
+    ) { grants ->
+        val granted = grants[Manifest.permission.RECEIVE_SMS] == true &&
+            grants[Manifest.permission.READ_SMS] == true
+        if (granted) viewModel.onSmsPermissionsGranted()
+    }
+
     ProfileContent(
         state = state,
         onSignOut = viewModel::onSignOut,
         onAddCardClick = viewModel::onAddCardClick,
         onCardClick = viewModel::onCardClick,
+        onSmsCaptureClick = {
+            if (state.smsCaptureEnabled) {
+                showCaptureDisableConfirm = true
+            } else {
+                showCaptureExplainer = true
+            }
+        },
         modifier = modifier,
     )
+
+    if (showCaptureExplainer) {
+        TintoConfirmDialog(
+            title = stringResource(R.string.capture_explainer_title),
+            message = stringResource(R.string.capture_explainer_message),
+            confirmLabel = stringResource(R.string.capture_explainer_confirm),
+            onConfirm = {
+                showCaptureExplainer = false
+                smsPermissionLauncher.launch(
+                    arrayOf(Manifest.permission.RECEIVE_SMS, Manifest.permission.READ_SMS),
+                )
+            },
+            onDismiss = { showCaptureExplainer = false },
+            destructive = false,
+        )
+    }
+
+    if (showCaptureDisableConfirm) {
+        TintoConfirmDialog(
+            title = stringResource(R.string.capture_disable_title),
+            message = stringResource(R.string.capture_disable_message),
+            confirmLabel = stringResource(R.string.capture_disable_confirm),
+            onConfirm = {
+                showCaptureDisableConfirm = false
+                viewModel.onSmsCaptureDisabled()
+            },
+            onDismiss = { showCaptureDisableConfirm = false },
+        )
+    }
 
     state.cardForm?.let { form ->
         CardFormSheet(
@@ -80,6 +137,7 @@ private fun ProfileContent(
     onSignOut: () -> Unit,
     onAddCardClick: () -> Unit,
     onCardClick: (Card) -> Unit,
+    onSmsCaptureClick: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
     val type = LocalTintoTypography.current
@@ -274,10 +332,19 @@ private fun ProfileContent(
             color = MaterialTheme.colorScheme.onBackground,
         )
         Spacer(Modifier.height(4.dp))
-        // Placeholder for the Sprint-3 capture onboarding (permissions live there).
+        // SMS capture is live (Sprint 3); notifications and Gmail stay
+        // scaffolded seams for the coming sprints.
         PermissionRow(Icons.Outlined.NotificationsNone, stringResource(R.string.profile_perm_notifications))
         HorizontalDivider(thickness = 0.5.dp, color = MaterialTheme.colorScheme.outline)
-        PermissionRow(Icons.Outlined.Sms, stringResource(R.string.profile_perm_sms))
+        PermissionRow(
+            icon = Icons.Outlined.Sms,
+            label = stringResource(R.string.profile_perm_sms),
+            statusLabel = stringResource(
+                if (state.smsCaptureEnabled) R.string.capture_sms_state_on else R.string.capture_sms_state_off,
+            ),
+            statusEmphasis = state.smsCaptureEnabled,
+            onClick = onSmsCaptureClick,
+        )
         HorizontalDivider(thickness = 0.5.dp, color = MaterialTheme.colorScheme.outline)
         PermissionRow(Icons.Outlined.Email, stringResource(R.string.profile_perm_gmail))
 
@@ -328,25 +395,36 @@ private fun ProfileContent(
 }
 
 @Composable
-private fun PermissionRow(icon: ImageVector, label: String) {
+private fun PermissionRow(
+    icon: ImageVector,
+    label: String,
+    statusLabel: String = stringResource(R.string.profile_perm_soon),
+    statusEmphasis: Boolean = false,
+    onClick: (() -> Unit)? = null,
+) {
     val type = LocalTintoTypography.current
     Row(
         modifier = Modifier
             .fillMaxWidth()
+            .then(if (onClick != null) Modifier.clickable(onClick = onClick) else Modifier)
             .padding(vertical = 12.dp),
         verticalAlignment = Alignment.CenterVertically,
     ) {
         Icon(
             imageVector = icon,
             contentDescription = null,
-            tint = LocalTintoColors.current.muted,
+            tint = if (statusEmphasis) LocalTintoColors.current.gold else LocalTintoColors.current.muted,
             modifier = Modifier.size(22.dp),
         )
         Spacer(Modifier.width(12.dp))
         Text(
             text = label,
             style = type.body,
-            color = MaterialTheme.colorScheme.onSurfaceVariant,
+            color = if (statusEmphasis) {
+                MaterialTheme.colorScheme.onBackground
+            } else {
+                MaterialTheme.colorScheme.onSurfaceVariant
+            },
             modifier = Modifier.weight(1f),
         )
         Box(
@@ -356,9 +434,13 @@ private fun PermissionRow(icon: ImageVector, label: String) {
                 .padding(horizontal = 10.dp, vertical = 3.dp),
         ) {
             Text(
-                text = stringResource(R.string.profile_perm_soon),
+                text = statusLabel,
                 style = type.meta,
-                color = LocalTintoColors.current.gold,
+                color = if (statusEmphasis) {
+                    LocalTintoColors.current.income
+                } else {
+                    LocalTintoColors.current.gold
+                },
             )
         }
     }

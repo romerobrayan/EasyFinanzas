@@ -12,9 +12,12 @@ import dev.romerobrayan.tinto.core.domain.repository.ReminderRepository
 import dev.romerobrayan.tinto.core.domain.usecase.markAsPaid
 import java.util.UUID
 import javax.inject.Inject
+import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.SharedFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.stateIn
@@ -48,6 +51,14 @@ class RemindersViewModel @Inject constructor(
 
     /** Non-null while the reminder bottom sheet is open. */
     private val form = MutableStateFlow<ReminderForm?>(null)
+
+    private val _saved = MutableSharedFlow<Unit>(extraBufferCapacity = 1)
+
+    /**
+     * Emits after a reminder is saved — the screen's cue to ask for the
+     * notification permission in context (first save, Android 13+).
+     */
+    val saved: SharedFlow<Unit> = _saved.asSharedFlow()
 
     val uiState: StateFlow<RemindersUiState> = combine(
         reminderRepository.observeReminders(),
@@ -148,6 +159,7 @@ class RemindersViewModel @Inject constructor(
                 reminderRepository.updateReminder(reminder)
             }
             form.value = null
+            _saved.tryEmit(Unit)
         }
     }
 

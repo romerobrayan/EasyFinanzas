@@ -8,11 +8,14 @@ import dagger.hilt.android.lifecycle.HiltViewModel
 import dev.romerobrayan.tinto.core.common.TintoAnalytics
 import dev.romerobrayan.tinto.core.domain.model.Money
 import dev.romerobrayan.tinto.core.domain.model.PaymentMethod
+import dev.romerobrayan.tinto.core.domain.model.PendingTransaction
 import dev.romerobrayan.tinto.core.domain.model.Transaction
 import dev.romerobrayan.tinto.core.domain.model.TransactionSource
 import dev.romerobrayan.tinto.core.domain.model.TransactionType
+import dev.romerobrayan.tinto.core.domain.model.asTransactionSource
 import dev.romerobrayan.tinto.core.domain.repository.CardRepository
 import dev.romerobrayan.tinto.core.domain.repository.CategoryRepository
+import dev.romerobrayan.tinto.core.domain.repository.PendingTransactionRepository
 import dev.romerobrayan.tinto.core.domain.repository.TransactionRepository
 import dev.romerobrayan.tinto.navigation.AddTransactionRoute
 import java.util.UUID
@@ -42,6 +45,7 @@ class AddTransactionViewModel @Inject constructor(
     private val transactionRepository: TransactionRepository,
     private val cardRepository: CardRepository,
     categoryRepository: CategoryRepository,
+    private val pendingRepository: PendingTransactionRepository,
     private val analytics: TintoAnalytics,
 ) : ViewModel() {
 
@@ -50,8 +54,14 @@ class AddTransactionViewModel @Inject constructor(
     /** Non-null when this screen was opened to edit an existing movement. */
     private val editingId: String? = savedStateHandle.toRoute<AddTransactionRoute>().transactionId
 
+    /** Non-null when reviewing a captured pending item (confirm mode). */
+    private val pendingId: String? = savedStateHandle.toRoute<AddTransactionRoute>().pendingId
+
     /** The movement being edited, once loaded; add mode keeps it null. */
     private var original: Transaction? = null
+
+    /** The pending capture being confirmed, once loaded. */
+    private var originalPending: PendingTransaction? = null
 
     private data class Form(
         val amountDigits: String = "",
@@ -74,6 +84,7 @@ class AddTransactionViewModel @Inject constructor(
 
     init {
         editingId?.let { id -> viewModelScope.launch { prefillFrom(id) } }
+        pendingId?.let { id -> viewModelScope.launch { prefillFromPending(id) } }
     }
 
     val uiState: StateFlow<AddTransactionUiState> = combine(
@@ -85,6 +96,7 @@ class AddTransactionViewModel @Inject constructor(
         val date = currentForm.date ?: today
         AddTransactionUiState(
             isEditing = editingId != null,
+            isConfirmingCapture = pendingId != null,
             amountDigits = currentForm.amountDigits,
             type = currentForm.type,
             method = currentForm.method,
@@ -128,6 +140,7 @@ class AddTransactionViewModel @Inject constructor(
         // Editing but the original hasn't loaded yet — saving now would fork a
         // duplicate movement, so ignore the tap (the load resolves in ms).
         if (editingId != null && original == null) return
+        if (pendingId != null && originalPending == null) return
         viewModelScope.launch {
             val now = Clock.System.now()
             val today = Clock.System.todayIn(timeZone)
@@ -136,6 +149,41 @@ class AddTransactionViewModel @Inject constructor(
                 cardRepository.observeCards().first().firstOrNull { it.last4 == currentForm.last4 }
             } else {
                 null
+            }
+            val confirming = originalPending
+            if (confirming != null) {
+                val pendingDate = confirming.occurredAt.toLocalDateTime(timeZone).date
+                transactionRepository.addTransaction(
+                    Transaction(
+                        id = UUID.randomUUID().toString(),
+                        type = currentForm.type,
+                        amount = Money.ofPesos(currentForm.amountDigits.toLong()),
+                        method = currentForm.method,
+                        cardId = matchedCard?.id,
+                        bank = if (currentForm.method == PaymentMethod.CARD) {
+                            matchedCard?.bank ?: confirming.bank
+                        } else {
+                            null
+                        },
+                        categoryId = requireNotNull(currentForm.categoryId),
+                        merchant = currentForm.merchant.trim().ifEmpty { null },
+                        // The parsed instant is the truth for an unchanged day;
+                        // a moved date lands at noon (or now, when today).
+                        occurredAt = when (date) {
+                            pendingDate -> confirming.occurredAt
+                            today -> now
+                            else -> date.atTime(12, 0).toInstant(timeZone)
+                        },
+                        // Provenance preserved — never rewritten to MANUAL.
+                        source = confirming.channel.asTransactionSource(),
+                        createdAt = now,
+                        updatedAt = now,
+                    ),
+                )
+                pendingRepository.markConfirmed(confirming.id)
+                analytics.logPendingConfirmed(1)
+                _saved.tryEmit(Unit)
+                return@launch
             }
             val editing = original
             if (editing != null) {
@@ -181,6 +229,37 @@ class AddTransactionViewModel @Inject constructor(
                 analytics.logAddTransaction(currentForm.type.name, currentForm.method.name)
             }
             _saved.tryEmit(Unit)
+        }
+    }
+
+    /** Removes the pending capture without a ledger write (confirm mode only). */
+    fun onDiscardPending() {
+        val pending = originalPending ?: return
+        viewModelScope.launch {
+            pendingRepository.markDiscarded(pending.id)
+            analytics.logPendingDiscarded(1)
+            _saved.tryEmit(Unit)
+        }
+    }
+
+    private suspend fun prefillFromPending(id: String) {
+        val pending = pendingRepository.observePending().first()
+            .firstOrNull { it.id == id } ?: return
+        originalPending = pending
+        val cards = cardRepository.observeCards().first()
+        val matchedLast4 = pending.cardId
+            ?.let { cardId -> cards.firstOrNull { it.id == cardId }?.last4 }
+            ?: pending.last4
+        form.update {
+            it.copy(
+                amountDigits = (pending.amount.cents / CENTS_PER_PESO).toString(),
+                type = pending.type,
+                // Cash never notifies; the user can still switch.
+                method = PaymentMethod.CARD,
+                last4 = matchedLast4.orEmpty(),
+                date = pending.occurredAt.toLocalDateTime(timeZone).date,
+                merchant = pending.merchant.orEmpty(),
+            )
         }
     }
 

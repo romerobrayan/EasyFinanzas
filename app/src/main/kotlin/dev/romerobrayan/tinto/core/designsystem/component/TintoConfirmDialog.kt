@@ -12,9 +12,10 @@ import dev.romerobrayan.tinto.core.designsystem.theme.LocalTintoColors
 import dev.romerobrayan.tinto.core.designsystem.theme.LocalTintoTypography
 
 /**
- * On-palette confirmation dialog for destructive actions (delete movement /
- * card / reminder). The confirm action renders in the expense red; dismissal
- * is always "Cancelar".
+ * On-palette confirmation dialog. Destructive confirmations (delete movement /
+ * card / reminder — the default) render the action in the expense red;
+ * affirmative ones (e.g. enabling capture) render it in gold. Dismissal is
+ * always "Cancelar".
  */
 @Composable
 fun TintoConfirmDialog(
@@ -23,6 +24,7 @@ fun TintoConfirmDialog(
     confirmLabel: String,
     onConfirm: () -> Unit,
     onDismiss: () -> Unit,
+    destructive: Boolean = true,
 ) {
     val type = LocalTintoTypography.current
     val tinto = LocalTintoColors.current
@@ -46,7 +48,11 @@ fun TintoConfirmDialog(
         },
         confirmButton = {
             TextButton(onClick = onConfirm) {
-                Text(text = confirmLabel, style = type.body, color = tinto.expense)
+                Text(
+                    text = confirmLabel,
+                    style = type.body,
+                    color = if (destructive) tinto.expense else tinto.gold,
+                )
             }
         },
         dismissButton = {

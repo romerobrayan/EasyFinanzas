@@ -40,6 +40,24 @@ interface TintoAnalytics {
     /** [recurrence] is the coarse enum name only — never titles or amounts. */
     fun logReminderPaid(recurrence: String)
 
+    /** [recurrence] only — a reminder notification fired on the device. */
+    fun logReminderNotificationShown(recurrence: String)
+
+    /** The user granted the SMS capture permissions (event alone, no params). */
+    fun logCapturePermissionGranted()
+
+    /** [channel] + [issuer] only — never amounts, merchants, senders or raw text. */
+    fun logCaptureDetected(channel: String, issuer: String)
+
+    /** [count] of pending captures promoted to the ledger in one action. */
+    fun logPendingConfirmed(count: Int)
+
+    /** [count] of pending captures discarded in one action. */
+    fun logPendingDiscarded(count: Int)
+
+    /** The inbox surfaced at least one "Posible duplicado" badge. */
+    fun logPendingDuplicateShown()
+
     /** Non-fatal error worth seeing in Crashlytics (e.g. a sync listener failure). */
     fun recordError(error: Throwable)
 }

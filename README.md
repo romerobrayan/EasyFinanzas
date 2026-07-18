@@ -11,7 +11,7 @@ notifications and Gmail.
 UI language is Spanish (es-CO); amounts are Colombian pesos handled as
 integer minor units end to end.
 
-## Status — Sprint 1: UI shell ✅ · Sprint 1.5: Firebase ✅ · Sprint 2: CRUD ✅
+## Status — Sprint 1: UI shell ✅ · Sprint 1.5: Firebase ✅ · Sprint 2: CRUD ✅ · Sprint 3: SMS capture ✅ · Reminder notifications ✅
 
 The complete visual shell plus the Firebase backbone: Google sign-in
 (Credential Manager), per-user Cloud Firestore persistence with offline
@@ -24,6 +24,17 @@ with edit and delete, card management in Perfil, and payment reminders
 with create/edit/delete and a recurrence-aware "mark as paid" (one-off
 reminders complete; weekly/monthly/yearly ones reschedule). Everything
 behaves identically in demo mode and signed in.
+
+Sprint 3 brings automatic capture, SMS first: an opt-in reader for
+Bancolombia and 1CERO1 bank messages (live receive + a bounded 90-day
+backfill) parsed by data-driven per-issuer rule sets into a device-local
+Room staging store. Detected movements surface in a pending inbox —
+multi-select with a select-all check, a per-item category picker, and a
+"Posible duplicado" badge (duplicates start unselected; the user decides
+whether to add or discard them). Nothing reaches the ledger without
+explicit confirmation. On top of that, reminders now fire real local
+notifications: at `dueTime` (or 08:00 for date-only reminders), surviving
+reboots, in demo and signed-in mode alike — all on-device, no server.
 
 ## Stack
 
@@ -44,8 +55,8 @@ Architecture + MVVM, package by feature.
 | [CLAUDE.md](CLAUDE.md) | Working agreements for AI-assisted development |
 | [TASK_SPRINT_1_UI_SHELL.md](TASK_SPRINT_1_UI_SHELL.md) | The Sprint 1 brief |
 | [TASK_SPRINT_2_CRUD.md](TASK_SPRINT_2_CRUD.md) | The Sprint 2 brief |
-| [TASK_SPRINT_3_CAPTURE.md](TASK_SPRINT_3_CAPTURE.md) | The Sprint 3 brief (planning) |
-| [TASK_REMINDER_NOTIFICATIONS.md](TASK_REMINDER_NOTIFICATIONS.md) | Backlog brief: local reminder notifications (after Sprint 3) |
+| [TASK_SPRINT_3_CAPTURE.md](TASK_SPRINT_3_CAPTURE.md) | The Sprint 3 brief |
+| [TASK_REMINDER_NOTIFICATIONS.md](TASK_REMINDER_NOTIFICATIONS.md) | Brief: local reminder notifications (delivered after Sprint 3) |
 
 ## Build
 

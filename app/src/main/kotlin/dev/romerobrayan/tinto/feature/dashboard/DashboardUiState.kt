@@ -8,6 +8,8 @@ import dev.romerobrayan.tinto.core.domain.model.Period
 import dev.romerobrayan.tinto.core.domain.model.TransactionType
 
 data class DashboardUiState(
+    /** Captured movements awaiting review; > 0 shows the "Detectamos…" banner. */
+    val pendingCount: Int = 0,
     val monthLabel: String = "",
     val monthOptions: List<MonthOption> = emptyList(),
     val selectedMonthKey: String = "",

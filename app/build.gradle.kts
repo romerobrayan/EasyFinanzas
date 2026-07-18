@@ -70,6 +70,12 @@ dependencies {
     implementation(libs.kotlinx.datetime)
     implementation(libs.kotlinx.coroutines.play.services)
 
+    // Room staging store for captured transactions (pending_transactions) —
+    // the documented reason from ARCHITECTURE.md's capture pipeline.
+    implementation(libs.room.runtime)
+    implementation(libs.room.ktx)
+    ksp(libs.room.compiler)
+
     implementation(platform(libs.firebase.bom))
     implementation(libs.firebase.auth)
     implementation(libs.firebase.firestore)

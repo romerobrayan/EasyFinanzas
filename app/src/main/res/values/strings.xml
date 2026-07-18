@@ -97,6 +97,15 @@
     <string name="reminder_mark_paid">Marcar como pagado</string>
     <string name="reminder_delete_confirm_title">¿Eliminar recordatorio?</string>
     <string name="reminder_delete_confirm_message">Esta acción no se puede deshacer.</string>
+    <!-- Reminder notifications -->
+    <string name="notif_channel_reminders">Recordatorios de pago</string>
+    <string name="notif_channel_reminders_desc">Alertas cuando un pago está por vencer</string>
+    <string name="reminder_notif_text">Vence hoy</string>
+    <string name="reminder_notif_text_amount">%1$s vence hoy</string>
+    <string name="reminder_permission_title">Activa las notificaciones</string>
+    <string name="reminder_permission_message">Para avisarte cuando un pago esté por vencer, Tinto necesita permiso para enviarte notificaciones. Si prefieres no activarlas, tus recordatorios seguirán funcionando sin alertas.</string>
+    <string name="reminder_permission_allow">Permitir</string>
+
     <string name="recurrence_none">Única vez</string>
     <string name="recurrence_weekly">Semanal</string>
     <string name="recurrence_monthly">Mensual</string>
@@ -126,6 +135,50 @@
     <string name="profile_perm_sms">Mensajes SMS</string>
     <string name="profile_perm_gmail">Correos de Gmail</string>
     <string name="profile_perm_soon">Próximamente</string>
+
+    <!-- Captura automática (SMS) -->
+    <string name="capture_sms_state_on">Activada</string>
+    <string name="capture_sms_state_off">Desactivada</string>
+    <string name="capture_explainer_title">Detectar movimientos por SMS</string>
+    <string name="capture_explainer_message">Tinto lee los mensajes de tu banco (Bancolombia y 1CERO1) para detectar movimientos automáticamente. Los mensajes se analizan solo en tu teléfono: el texto nunca sale del dispositivo ni se sube a la nube. Nada llega a tus movimientos sin que lo confirmes. Esta función es para compilaciones personales de la app.</string>
+    <string name="capture_explainer_confirm">Activar</string>
+    <string name="capture_disable_title">¿Desactivar la captura por SMS?</string>
+    <string name="capture_disable_message">Dejaremos de detectar movimientos nuevos. Los pendientes por revisar no se borran.</string>
+    <string name="capture_disable_confirm">Desactivar</string>
+
+    <!-- Pending inbox (movimientos detectados) -->
+    <plurals name="pending_banner">
+        <item quantity="one">Detectamos un movimiento nuevo</item>
+        <item quantity="other">Detectamos %d movimientos nuevos</item>
+    </plurals>
+    <string name="pending_review_action">Revisar</string>
+    <string name="pending_title">Movimientos detectados</string>
+    <string name="pending_empty">No hay movimientos por revisar</string>
+    <string name="pending_select_all">Seleccionar todo</string>
+    <plurals name="pending_selected_count">
+        <item quantity="one">%d seleccionado</item>
+        <item quantity="other">%d seleccionados</item>
+    </plurals>
+    <string name="pending_source_sms">SMS · %1$s</string>
+    <string name="pending_source_notification">Notificación · %1$s</string>
+    <string name="pending_no_card">Sin tarjeta</string>
+    <string name="pending_duplicate_badge">Posible duplicado</string>
+    <plurals name="pending_confirm_button">
+        <item quantity="one">Agregar %d movimiento</item>
+        <item quantity="other">Agregar %d movimientos</item>
+    </plurals>
+    <string name="pending_discard_selected">Descartar seleccionados</string>
+    <string name="pending_discard_confirm_title">¿Descartar movimientos?</string>
+    <plurals name="pending_discard_confirm_message">
+        <item quantity="one">Se descartará %d movimiento detectado. Esta acción no se puede deshacer.</item>
+        <item quantity="other">Se descartarán %d movimientos detectados. Esta acción no se puede deshacer.</item>
+    </plurals>
+    <string name="pending_category_picker_title">Selecciona una categoría</string>
+    <string name="pending_confirm_title">Confirmar movimiento</string>
+    <string name="pending_confirm_cta">Confirmar movimiento</string>
+    <string name="pending_discard_one_title">¿Descartar este movimiento?</string>
+    <string name="pending_discard_one_message">Se quitará de los detectados sin agregarse a tus movimientos.</string>
+    <string name="action_discard">Descartar</string>
 
     <!-- Login / session -->
     <string name="login_tagline">Tus finanzas personales, claras y en un solo lugar</string>

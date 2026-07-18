@@ -17,6 +17,7 @@ import dev.romerobrayan.tinto.core.designsystem.component.TintoTab
 import dev.romerobrayan.tinto.feature.addtransaction.AddTransactionScreen
 import dev.romerobrayan.tinto.feature.dashboard.DashboardScreen
 import dev.romerobrayan.tinto.feature.movements.MovementsScreen
+import dev.romerobrayan.tinto.feature.pending.PendingReviewScreen
 import dev.romerobrayan.tinto.feature.profile.ProfileScreen
 import dev.romerobrayan.tinto.feature.reminders.RemindersScreen
 
@@ -25,10 +26,18 @@ import dev.romerobrayan.tinto.feature.reminders.RemindersScreen
  * the add-transaction screen (capture mode is full-screen).
  *
  * @param onScreenView reports destination changes to analytics as `screen_view`.
+ * @param openRemindersOnLaunch lands on Recordatorios (reminder-notification tap).
  */
 @Composable
-fun TintoApp(onScreenView: (String) -> Unit = {}) {
+fun TintoApp(
+    onScreenView: (String) -> Unit = {},
+    openRemindersOnLaunch: Boolean = false,
+) {
     val navController = rememberNavController()
+
+    LaunchedEffect(Unit) {
+        if (openRemindersOnLaunch) navController.navigateToTab(TintoTab.REMINDERS)
+    }
     val backStackEntry by navController.currentBackStackEntryAsState()
     val currentDestination = backStackEntry?.destination
 
@@ -46,6 +55,7 @@ fun TintoApp(onScreenView: (String) -> Unit = {}) {
         currentDestination.hasRoute<DashboardRoute>() -> "dashboard"
         currentDestination.hasRoute<MovementsRoute>() -> "movements"
         currentDestination.hasRoute<AddTransactionRoute>() -> "add_transaction"
+        currentDestination.hasRoute<PendingRoute>() -> "pending_review"
         currentDestination.hasRoute<RemindersRoute>() -> "reminders"
         currentDestination.hasRoute<ProfileRoute>() -> "profile"
         else -> null
@@ -72,6 +82,7 @@ fun TintoApp(onScreenView: (String) -> Unit = {}) {
                 DashboardScreen(
                     onSeeAll = { navController.navigateToTab(TintoTab.MOVEMENTS) },
                     onEditMovement = onEditMovement,
+                    onReviewPending = { navController.navigate(PendingRoute) },
                 )
             }
             composable<MovementsRoute> {
@@ -79,6 +90,14 @@ fun TintoApp(onScreenView: (String) -> Unit = {}) {
             }
             composable<AddTransactionRoute> {
                 AddTransactionScreen(onClose = { navController.popBackStack() })
+            }
+            composable<PendingRoute> {
+                PendingReviewScreen(
+                    onClose = { navController.popBackStack() },
+                    onReviewItem = { pendingId ->
+                        navController.navigate(AddTransactionRoute(pendingId = pendingId))
+                    },
+                )
             }
             composable<RemindersRoute> {
                 RemindersScreen()

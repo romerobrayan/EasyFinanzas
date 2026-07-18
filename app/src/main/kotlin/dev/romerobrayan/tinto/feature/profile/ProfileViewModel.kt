@@ -9,6 +9,7 @@ import dev.romerobrayan.tinto.core.domain.model.Card
 import dev.romerobrayan.tinto.core.domain.model.UserSession
 import dev.romerobrayan.tinto.core.domain.repository.AuthRepository
 import dev.romerobrayan.tinto.core.domain.repository.CardRepository
+import dev.romerobrayan.tinto.core.domain.repository.SmsCapture
 import java.util.UUID
 import javax.inject.Inject
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -24,6 +25,7 @@ class ProfileViewModel @Inject constructor(
     private val authRepository: AuthRepository,
     private val analytics: TintoAnalytics,
     private val cardRepository: CardRepository,
+    private val smsCapture: SmsCapture,
 ) : ViewModel() {
 
     private data class CardForm(
@@ -40,8 +42,9 @@ class ProfileViewModel @Inject constructor(
     val uiState: StateFlow<ProfileUiState> = combine(
         authRepository.session,
         cardRepository.observeCards(),
+        smsCapture.enabled,
         cardForm,
-    ) { session, cards, form ->
+    ) { session, cards, captureEnabled, form ->
         val formUi = form?.let {
             CardFormUiState(
                 editingCardId = it.editingCardId,
@@ -57,6 +60,7 @@ class ProfileViewModel @Inject constructor(
                 userEmail = session.user.email.orEmpty(),
                 cards = cards,
                 isDemo = false,
+                smsCaptureEnabled = captureEnabled,
                 cardForm = formUi,
             )
 
@@ -67,10 +71,20 @@ class ProfileViewModel @Inject constructor(
                 userEmail = MockData.USER_EMAIL,
                 cards = cards,
                 isDemo = true,
+                smsCaptureEnabled = captureEnabled,
                 cardForm = formUi,
             )
         }
     }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), ProfileUiState())
+
+    /** The UI granted RECEIVE_SMS + READ_SMS — enable capture and backfill. */
+    fun onSmsPermissionsGranted() {
+        smsCapture.onPermissionsGranted()
+    }
+
+    fun onSmsCaptureDisabled() {
+        smsCapture.disable()
+    }
 
     fun onAddCardClick() {
         cardForm.value = CardForm()
