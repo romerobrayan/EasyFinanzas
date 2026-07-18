@@ -8,6 +8,11 @@
          Play-restricted; this is a personally-sideloaded build. -->
     <uses-permission android:name="android.permission.RECEIVE_SMS" />
     <uses-permission android:name="android.permission.READ_SMS" />
+    <!-- SMS permissions imply telephony; mark it optional so the app stays
+         installable on devices without it (capture simply never fires). -->
+    <uses-feature
+        android:name="android.hardware.telephony"
+        android:required="false" />
     <!-- Local reminder notifications: alert channel + reboot re-registration. -->
     <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
     <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED" />
