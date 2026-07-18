@@ -19,5 +19,7 @@ data class ProfileUiState(
     val cards: List<Card> = emptyList(),
     /** True while exploring with sample data (no cloud persistence). */
     val isDemo: Boolean = false,
+    /** Whether the user opted in to SMS capture (Sprint 3). */
+    val smsCaptureEnabled: Boolean = false,
     val cardForm: CardFormUiState? = null,
 )

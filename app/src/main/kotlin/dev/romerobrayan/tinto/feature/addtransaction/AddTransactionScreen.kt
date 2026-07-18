@@ -30,6 +30,7 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.material3.TextField
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -57,6 +58,7 @@ import dev.romerobrayan.tinto.R
 import dev.romerobrayan.tinto.core.common.Dates
 import dev.romerobrayan.tinto.core.common.MoneyFormat
 import dev.romerobrayan.tinto.core.designsystem.component.CategoryIcon
+import dev.romerobrayan.tinto.core.designsystem.component.TintoConfirmDialog
 import dev.romerobrayan.tinto.core.designsystem.component.TintoDatePickerDialog
 import dev.romerobrayan.tinto.core.designsystem.component.TintoSelectorPill
 import dev.romerobrayan.tinto.core.designsystem.component.tintoTextFieldColors
@@ -92,6 +94,7 @@ fun AddTransactionScreen(
         onDateChanged = viewModel::onDateChanged,
         onMerchantChanged = viewModel::onMerchantChanged,
         onSubmit = viewModel::onSubmit,
+        onDiscardPending = viewModel::onDiscardPending,
         modifier = modifier,
     )
 }
@@ -109,11 +112,13 @@ private fun AddTransactionContent(
     onDateChanged: (LocalDate) -> Unit,
     onMerchantChanged: (String) -> Unit,
     onSubmit: () -> Unit,
+    onDiscardPending: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
     val type = LocalTintoTypography.current
     val tinto = LocalTintoColors.current
     var showDatePicker by rememberSaveable { mutableStateOf(false) }
+    var showDiscardConfirm by rememberSaveable { mutableStateOf(false) }
 
     Column(
         modifier = modifier
@@ -126,7 +131,11 @@ private fun AddTransactionContent(
         Row(verticalAlignment = Alignment.CenterVertically) {
             Text(
                 text = stringResource(
-                    if (state.isEditing) R.string.add_title_edit else R.string.add_title,
+                    when {
+                        state.isConfirmingCapture -> R.string.pending_confirm_title
+                        state.isEditing -> R.string.add_title_edit
+                        else -> R.string.add_title
+                    },
                 ),
                 style = type.screenTitle,
                 color = MaterialTheme.colorScheme.onBackground,
@@ -298,6 +307,7 @@ private fun AddTransactionContent(
             Text(
                 text = stringResource(
                     when {
+                        state.isConfirmingCapture -> R.string.pending_confirm_cta
                         state.isEditing -> R.string.add_save_changes
                         state.type == TransactionType.EXPENSE -> R.string.add_save_expense
                         else -> R.string.add_save_income
@@ -306,7 +316,33 @@ private fun AddTransactionContent(
                 style = type.body.copy(fontWeight = FontWeight.Medium),
             )
         }
+        if (state.isConfirmingCapture) {
+            Spacer(Modifier.height(6.dp))
+            TextButton(
+                onClick = { showDiscardConfirm = true },
+                modifier = Modifier.align(Alignment.CenterHorizontally),
+            ) {
+                Text(
+                    text = stringResource(R.string.action_discard),
+                    style = type.body.copy(fontWeight = FontWeight.Medium),
+                    color = tinto.expense,
+                )
+            }
+        }
         Spacer(Modifier.height(24.dp))
+    }
+
+    if (showDiscardConfirm) {
+        TintoConfirmDialog(
+            title = stringResource(R.string.pending_discard_one_title),
+            message = stringResource(R.string.pending_discard_one_message),
+            confirmLabel = stringResource(R.string.action_discard),
+            onConfirm = {
+                showDiscardConfirm = false
+                onDiscardPending()
+            },
+            onDismiss = { showDiscardConfirm = false },
+        )
     }
 
     if (showDatePicker) {

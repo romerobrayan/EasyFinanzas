@@ -10,9 +10,20 @@ data object DashboardRoute
 @Serializable
 data object MovementsRoute
 
-/** [transactionId] null = add a new movement; non-null = edit that movement. */
+/**
+ * [transactionId] null = add a new movement; non-null = edit that movement.
+ * [pendingId] non-null = review/confirm that captured pending item (the form
+ * pre-fills from the parse and Confirmar promotes it to the ledger).
+ */
 @Serializable
-data class AddTransactionRoute(val transactionId: String? = null)
+data class AddTransactionRoute(
+    val transactionId: String? = null,
+    val pendingId: String? = null,
+)
+
+/** The pending-capture inbox (Sprint 3): review, confirm or discard in batch. */
+@Serializable
+data object PendingRoute
 
 @Serializable
 data object RemindersRoute

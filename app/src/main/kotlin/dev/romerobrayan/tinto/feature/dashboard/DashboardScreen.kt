@@ -16,6 +16,7 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.outlined.MarkChatUnread
 import androidx.compose.material.icons.rounded.ArrowDownward
 import androidx.compose.material.icons.rounded.ArrowUpward
 import androidx.compose.material3.HorizontalDivider
@@ -30,6 +31,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
@@ -47,6 +49,7 @@ import dev.romerobrayan.tinto.core.designsystem.component.TintoSelectorPill
 import dev.romerobrayan.tinto.core.designsystem.theme.LocalTintoColors
 import dev.romerobrayan.tinto.core.designsystem.theme.LocalTintoTypography
 import dev.romerobrayan.tinto.core.designsystem.theme.PillShape
+import dev.romerobrayan.tinto.core.designsystem.theme.TileShape
 import dev.romerobrayan.tinto.core.domain.model.Period
 import dev.romerobrayan.tinto.core.domain.model.TransactionType
 
@@ -54,6 +57,7 @@ import dev.romerobrayan.tinto.core.domain.model.TransactionType
 fun DashboardScreen(
     onSeeAll: () -> Unit,
     onEditMovement: (String) -> Unit,
+    onReviewPending: () -> Unit,
     modifier: Modifier = Modifier,
     viewModel: DashboardViewModel = hiltViewModel(),
 ) {
@@ -67,6 +71,7 @@ fun DashboardScreen(
         onSeeAll = onSeeAll,
         onEditMovement = onEditMovement,
         onDeleteMovement = viewModel::onDeleteMovement,
+        onReviewPending = onReviewPending,
         modifier = modifier,
     )
 }
@@ -81,6 +86,7 @@ private fun DashboardContent(
     onSeeAll: () -> Unit,
     onEditMovement: (String) -> Unit,
     onDeleteMovement: (String) -> Unit,
+    onReviewPending: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
     val type = LocalTintoTypography.current
@@ -100,6 +106,11 @@ private fun DashboardContent(
             style = type.screenTitle,
             color = MaterialTheme.colorScheme.onBackground,
         )
+
+        if (state.pendingCount > 0) {
+            Spacer(Modifier.height(14.dp))
+            PendingBanner(count = state.pendingCount, onReview = onReviewPending)
+        }
 
         Spacer(Modifier.height(16.dp))
         MonthSelector(label = state.monthLabel, onClick = { showMonthSheet = true })
@@ -220,6 +231,42 @@ private fun DashboardContent(
                 onDeleteMovement(selectedMovement.id)
             },
             onDismiss = { selectedMovementId = null },
+        )
+    }
+}
+
+/** "Detectamos N movimientos nuevos" + Revisar — never raw capture text. */
+@Composable
+private fun PendingBanner(count: Int, onReview: () -> Unit) {
+    val type = LocalTintoTypography.current
+    val tinto = LocalTintoColors.current
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .clip(TileShape)
+            .background(MaterialTheme.colorScheme.surfaceVariant)
+            .clickable(onClick = onReview)
+            .padding(horizontal = 14.dp, vertical = 12.dp),
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
+        Icon(
+            imageVector = Icons.Outlined.MarkChatUnread,
+            contentDescription = null,
+            tint = tinto.gold,
+            modifier = Modifier.size(20.dp),
+        )
+        Spacer(Modifier.width(10.dp))
+        Text(
+            text = pluralStringResource(R.plurals.pending_banner, count, count),
+            style = type.body,
+            color = MaterialTheme.colorScheme.onBackground,
+            modifier = Modifier.weight(1f),
+        )
+        Spacer(Modifier.width(10.dp))
+        Text(
+            text = stringResource(R.string.pending_review_action),
+            style = type.body.copy(fontWeight = FontWeight.Medium),
+            color = tinto.gold,
         )
     }
 }
