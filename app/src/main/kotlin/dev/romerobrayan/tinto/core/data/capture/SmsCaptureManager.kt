@@ -1,6 +1,7 @@
 package dev.romerobrayan.tinto.core.data.capture
 
 import dev.romerobrayan.tinto.core.common.TintoAnalytics
+import dev.romerobrayan.tinto.core.domain.model.CaptureChannel
 import dev.romerobrayan.tinto.core.domain.repository.SmsCapture
 import javax.inject.Inject
 import javax.inject.Singleton
@@ -25,7 +26,7 @@ class SmsCaptureManager @Inject constructor(
     override val enabled: StateFlow<Boolean> = settings.smsCaptureEnabled
 
     override fun onPermissionsGranted() {
-        analytics.logCapturePermissionGranted()
+        analytics.logCapturePermissionGranted(CaptureChannel.SMS.name)
         settings.setSmsCaptureEnabled(true)
         applicationScope.launch { backfill.runOnce() }
     }

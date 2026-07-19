@@ -9,6 +9,7 @@ import dev.romerobrayan.tinto.core.domain.model.Card
 import dev.romerobrayan.tinto.core.domain.model.UserSession
 import dev.romerobrayan.tinto.core.domain.repository.AuthRepository
 import dev.romerobrayan.tinto.core.domain.repository.CardRepository
+import dev.romerobrayan.tinto.core.domain.repository.NotificationCapture
 import dev.romerobrayan.tinto.core.domain.repository.SmsCapture
 import java.util.UUID
 import javax.inject.Inject
@@ -26,6 +27,7 @@ class ProfileViewModel @Inject constructor(
     private val analytics: TintoAnalytics,
     private val cardRepository: CardRepository,
     private val smsCapture: SmsCapture,
+    private val notificationCapture: NotificationCapture,
 ) : ViewModel() {
 
     private data class CardForm(
@@ -39,12 +41,25 @@ class ProfileViewModel @Inject constructor(
     /** Non-null while the card bottom sheet is open. */
     private val cardForm = MutableStateFlow<CardForm?>(null)
 
+    private data class CaptureState(
+        val smsEnabled: Boolean,
+        val notificationsEnabled: Boolean,
+        val notificationAccessGranted: Boolean,
+    )
+
+    private val captureState = combine(
+        smsCapture.enabled,
+        notificationCapture.enabled,
+        notificationCapture.accessGranted,
+        ::CaptureState,
+    )
+
     val uiState: StateFlow<ProfileUiState> = combine(
         authRepository.session,
         cardRepository.observeCards(),
-        smsCapture.enabled,
+        captureState,
         cardForm,
-    ) { session, cards, captureEnabled, form ->
+    ) { session, cards, capture, form ->
         val formUi = form?.let {
             CardFormUiState(
                 editingCardId = it.editingCardId,
@@ -60,7 +75,9 @@ class ProfileViewModel @Inject constructor(
                 userEmail = session.user.email.orEmpty(),
                 cards = cards,
                 isDemo = false,
-                smsCaptureEnabled = captureEnabled,
+                smsCaptureEnabled = capture.smsEnabled,
+                notificationCaptureEnabled = capture.notificationsEnabled,
+                notificationAccessGranted = capture.notificationAccessGranted,
                 cardForm = formUi,
             )
 
@@ -71,7 +88,9 @@ class ProfileViewModel @Inject constructor(
                 userEmail = MockData.USER_EMAIL,
                 cards = cards,
                 isDemo = true,
-                smsCaptureEnabled = captureEnabled,
+                smsCaptureEnabled = capture.smsEnabled,
+                notificationCaptureEnabled = capture.notificationsEnabled,
+                notificationAccessGranted = capture.notificationAccessGranted,
                 cardForm = formUi,
             )
         }
@@ -84,6 +103,34 @@ class ProfileViewModel @Inject constructor(
 
     fun onSmsCaptureDisabled() {
         smsCapture.disable()
+    }
+
+    /**
+     * The screen resumed — re-read the system notification-access state so a
+     * grant or revocation made in settings is reflected immediately.
+     */
+    fun onScreenResumed() {
+        notificationCapture.refreshAccess()
+    }
+
+    /**
+     * The UI returned from the notification-access settings mid-opt-in:
+     * re-check access and, if it was granted, complete the opt-in.
+     */
+    fun onNotificationOptInReturned() {
+        notificationCapture.refreshAccess()
+        if (notificationCapture.accessGranted.value) {
+            notificationCapture.onAccessGranted()
+        }
+    }
+
+    /** Access was already granted when the user confirmed the explainer. */
+    fun onNotificationAccessGranted() {
+        notificationCapture.onAccessGranted()
+    }
+
+    fun onNotificationCaptureDisabled() {
+        notificationCapture.disable()
     }
 
     fun onAddCardClick() {

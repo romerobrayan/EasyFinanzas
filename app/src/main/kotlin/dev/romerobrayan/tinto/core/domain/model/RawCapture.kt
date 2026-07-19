@@ -8,7 +8,7 @@ import kotlinx.datetime.Instant
  * pipeline below the source glue is JVM-testable.
  */
 data class RawCapture(
-    /** "85540", "891134", or a package name once notifications land. */
+    /** An SMS shortcode ("85540", "891134") or a notification package name. */
     val sender: String,
     val body: String,
     /** Date fallback for messages whose body carries no absolute date. */

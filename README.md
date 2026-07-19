@@ -11,7 +11,7 @@ notifications and Gmail.
 UI language is Spanish (es-CO); amounts are Colombian pesos handled as
 integer minor units end to end.
 
-## Status — Sprint 1: UI shell ✅ · Sprint 1.5: Firebase ✅ · Sprint 2: CRUD ✅ · Sprint 3: SMS capture ✅ · Reminder notifications ✅
+## Status — Sprint 1: UI shell ✅ · Sprint 1.5: Firebase ✅ · Sprint 2: CRUD ✅ · Sprint 3: SMS capture ✅ · Reminder notifications ✅ · Sprint 4 phase 1: Nu notification capture ✅ (Gmail pending)
 
 The complete visual shell plus the Firebase backbone: Google sign-in
 (Credential Manager), per-user Cloud Firestore persistence with offline
@@ -36,6 +36,15 @@ explicit confirmation. On top of that, reminders now fire real local
 notifications: at `dueTime` (or 08:00 for date-only reminders), surviving
 reboots, in demo and signed-in mode alike — all on-device, no server.
 
+Sprint 4 phase 1 lights up the second capture channel: Nu push
+notifications. A `NotificationListenerService` — behind its own opt-in in
+Perfil plus the system notification-access grant — feeds Nu's purchase and
+payment notifications through the same on-device parser and pending inbox
+as SMS, with relative dates falling back to the notification's post time
+and payment *requests* dropped as noise. No history backfill exists for
+notifications: capture starts from the moment access is granted. Phase 2
+(Gmail transactional email) is still pending.
+
 ## Stack
 
 Kotlin · Jetpack Compose (Material 3) · Hilt · Navigation Compose
@@ -57,6 +66,7 @@ Architecture + MVVM, package by feature.
 | [TASK_SPRINT_2_CRUD.md](TASK_SPRINT_2_CRUD.md) | The Sprint 2 brief |
 | [TASK_SPRINT_3_CAPTURE.md](TASK_SPRINT_3_CAPTURE.md) | The Sprint 3 brief |
 | [TASK_REMINDER_NOTIFICATIONS.md](TASK_REMINDER_NOTIFICATIONS.md) | Brief: local reminder notifications (delivered after Sprint 3) |
+| [TASK_SPRINT_4_NOTIFICATIONS_GMAIL.md](TASK_SPRINT_4_NOTIFICATIONS_GMAIL.md) | The Sprint 4 brief (Nu notifications + Gmail) |
 
 ## Build
 

@@ -1,8 +1,8 @@
 package dev.romerobrayan.tinto.core.domain.model
 
 /**
- * Where a raw bank message came from. SMS is the only live channel this
- * sprint; NOTIFICATION is the scaffolded seam for the Nu push capture.
+ * Where a raw bank message came from. SMS (Bancolombia/1CERO1) and
+ * NOTIFICATION (Nu push) are both live channels.
  */
 enum class CaptureChannel { SMS, NOTIFICATION }
 

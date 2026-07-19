@@ -45,6 +45,20 @@
             </intent-filter>
         </receiver>
 
+        <!-- Nu notification capture (Sprint 4): the listener binds only after
+             the user grants notification access in system settings, and stays
+             inert until the explicit opt-in in Perfil. Only the allow-listed
+             Nu package is read; everything else is ignored before parsing. -->
+        <service
+            android:name=".core.data.capture.notification.TintoNotificationListenerService"
+            android:exported="false"
+            android:label="@string/app_name"
+            android:permission="android.permission.BIND_NOTIFICATION_LISTENER_SERVICE">
+            <intent-filter>
+                <action android:name="android.service.notification.NotificationListenerService" />
+            </intent-filter>
+        </service>
+
         <receiver
             android:name=".core.data.notifications.ReminderAlarmReceiver"
             android:exported="false" />

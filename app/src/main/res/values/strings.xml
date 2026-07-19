@@ -131,20 +131,25 @@
     <string name="profile_export">Exportar datos</string>
     <string name="profile_export_hint">Exporta tus movimientos en JSON versionado</string>
     <string name="profile_permissions_section">Captura automática</string>
-    <string name="profile_perm_notifications">Notificaciones bancarias</string>
+    <string name="profile_perm_notifications">Notificaciones (Nu)</string>
     <string name="profile_perm_sms">Mensajes SMS</string>
     <string name="profile_perm_gmail">Correos de Gmail</string>
     <string name="profile_perm_soon">Próximamente</string>
 
-    <!-- Captura automática (SMS) -->
-    <string name="capture_sms_state_on">Activada</string>
-    <string name="capture_sms_state_off">Desactivada</string>
+    <!-- Captura automática -->
+    <string name="capture_state_on">Activada</string>
+    <string name="capture_state_off">Desactivada</string>
+    <string name="capture_state_no_access">Sin acceso</string>
     <string name="capture_explainer_title">Detectar movimientos por SMS</string>
     <string name="capture_explainer_message">Tinto lee los mensajes de tu banco (Bancolombia y 1CERO1) para detectar movimientos automáticamente. Los mensajes se analizan solo en tu teléfono: el texto nunca sale del dispositivo ni se sube a la nube. Nada llega a tus movimientos sin que lo confirmes. Esta función es para compilaciones personales de la app.</string>
     <string name="capture_explainer_confirm">Activar</string>
     <string name="capture_disable_title">¿Desactivar la captura por SMS?</string>
     <string name="capture_disable_message">Dejaremos de detectar movimientos nuevos. Los pendientes por revisar no se borran.</string>
     <string name="capture_disable_confirm">Desactivar</string>
+    <string name="capture_notification_explainer_title">Detectar movimientos de Nu</string>
+    <string name="capture_notification_explainer_message">Tinto lee las notificaciones de la app de Nu para detectar movimientos automáticamente. Las notificaciones se analizan solo en tu teléfono: el texto nunca sale del dispositivo ni se sube a la nube. Detectamos movimientos desde ahora — no hay historial de notificaciones anteriores. Nada llega a tus movimientos sin que lo confirmes. En la siguiente pantalla, permite el acceso a notificaciones para Tinto.</string>
+    <string name="capture_notification_explainer_confirm">Permitir acceso</string>
+    <string name="capture_notification_disable_title">¿Desactivar la captura de notificaciones?</string>
 
     <!-- Pending inbox (movimientos detectados) -->
     <plurals name="pending_banner">
