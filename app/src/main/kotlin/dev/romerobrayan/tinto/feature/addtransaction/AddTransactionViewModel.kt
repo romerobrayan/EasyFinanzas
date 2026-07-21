@@ -6,6 +6,7 @@ import androidx.lifecycle.viewModelScope
 import androidx.navigation.toRoute
 import dagger.hilt.android.lifecycle.HiltViewModel
 import dev.romerobrayan.tinto.core.common.TintoAnalytics
+import dev.romerobrayan.tinto.core.domain.model.Card
 import dev.romerobrayan.tinto.core.domain.model.Category
 import dev.romerobrayan.tinto.core.domain.model.Money
 import dev.romerobrayan.tinto.core.domain.model.PaymentMethod

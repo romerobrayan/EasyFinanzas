@@ -10,6 +10,7 @@ import dev.romerobrayan.tinto.core.domain.model.Category
 import dev.romerobrayan.tinto.core.domain.model.PaymentMethod
 import dev.romerobrayan.tinto.core.domain.model.PendingTransaction
 import dev.romerobrayan.tinto.core.domain.model.Transaction
+import dev.romerobrayan.tinto.core.domain.model.TransactionType
 import dev.romerobrayan.tinto.core.domain.model.asTransactionSource
 import dev.romerobrayan.tinto.core.domain.repository.CardRepository
 import dev.romerobrayan.tinto.core.domain.repository.CategoryRepository
@@ -201,12 +202,15 @@ class PendingReviewViewModel @Inject constructor(
 
         val categoriesById = categories.associateBy { it.id }
         val cardsById = cards.associateBy { it.id }
-        val fallbackCategory = categoriesById[DEFAULT_CATEGORY_ID] ?: categories.lastOrNull()
 
         val items = pending.map { item ->
+            // Default category depends on direction: captured incomes (Bancolombia
+            // SMS today) land under an income category, expenses under "Otros".
+            val defaultCategoryId = defaultCategoryIdFor(item.type)
             val category = currentReview.categoryOverrides[item.id]
                 ?.let(categoriesById::get)
-                ?: fallbackCategory
+                ?: categoriesById[defaultCategoryId]
+                ?: categories.lastOrNull()
             // Staging matched the card once; re-match here so a card
             // registered after the capture still lines up at review time.
             val matchedCard = item.cardId?.let(cardsById::get)
@@ -223,7 +227,7 @@ class PendingReviewViewModel @Inject constructor(
                 cardLast4 = matchedCard?.last4 ?: item.last4,
                 cardId = matchedCard?.id,
                 bank = item.bank,
-                categoryId = category?.id ?: DEFAULT_CATEGORY_ID,
+                categoryId = category?.id ?: defaultCategoryId,
                 categoryName = category?.name.orEmpty(),
                 categoryIconKey = category?.iconKey ?: "dots",
                 categoryColorHex = category?.colorHex ?: "#B99CA6",
@@ -243,8 +247,16 @@ class PendingReviewViewModel @Inject constructor(
         )
     }
 
+    private fun defaultCategoryIdFor(type: TransactionType): String = when (type) {
+        TransactionType.INCOME -> DEFAULT_INCOME_CATEGORY_ID
+        TransactionType.EXPENSE -> DEFAULT_EXPENSE_CATEGORY_ID
+    }
+
     private companion object {
-        /** Seeded in demo and cloud alike; captures stage as "Otros" by default. */
-        const val DEFAULT_CATEGORY_ID = "cat-otros"
+        /** Seeded in demo and cloud alike; expense captures stage as "Otros". */
+        const val DEFAULT_EXPENSE_CATEGORY_ID = "cat-otros"
+
+        /** Income captures (Bancolombia SMS) stage as "Movimiento" by default. */
+        const val DEFAULT_INCOME_CATEGORY_ID = "cat-movimiento"
     }
 }
