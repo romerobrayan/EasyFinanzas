@@ -36,6 +36,7 @@
     <string name="filter_all">Todos</string>
     <string name="movements_empty">Sin movimientos para este filtro</string>
     <string name="method_cash">Efectivo</string>
+    <string name="method_transfer">Transferencia</string>
     <string name="card_mask">•••• %1$s</string>
 
     <!-- Add transaction -->
@@ -45,6 +46,7 @@
     <string name="add_method_label">Método de pago</string>
     <string name="add_method_card">Tarjeta</string>
     <string name="add_method_cash">Efectivo</string>
+    <string name="add_method_transfer">Transferencia</string>
     <string name="add_amount_placeholder">$0</string>
     <string name="add_last4_label">Últimos 4 dígitos de la tarjeta</string>
     <string name="add_category_label">Categoría</string>

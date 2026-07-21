@@ -136,8 +136,16 @@ class AddTransactionViewModel @Inject constructor(
         val categoryStillValid = current.categoryId?.let { id ->
             allCategories.firstOrNull { it.id == id }?.scope == targetScope
         } ?: false
+        // Transferencia only exists for incomes — drop back to Efectivo when
+        // switching to an expense so an expense never carries TRANSFER.
+        val method = if (type == TransactionType.EXPENSE && current.method == PaymentMethod.TRANSFER) {
+            PaymentMethod.CASH
+        } else {
+            current.method
+        }
         current.copy(
             type = type,
+            method = method,
             categoryId = if (categoryStillValid) current.categoryId else null,
         )
     }
@@ -146,6 +154,14 @@ class AddTransactionViewModel @Inject constructor(
 
     fun onLast4Changed(value: String) {
         form.update { it.copy(last4 = value.filter(Char::isDigit).take(4)) }
+    }
+
+    /**
+     * Income card pick: choose a registered card without typing digits — the
+     * card's last4 comes along so submit's card-match still resolves it.
+     */
+    fun onCardSelected(card: Card) = form.update {
+        it.copy(method = PaymentMethod.CARD, last4 = card.last4)
     }
 
     fun onCategorySelected(categoryId: String) = form.update { it.copy(categoryId = categoryId) }
@@ -277,8 +293,13 @@ class AddTransactionViewModel @Inject constructor(
             it.copy(
                 amountDigits = (pending.amount.cents / CENTS_PER_PESO).toString(),
                 type = pending.type,
-                // Cash never notifies; the user can still switch.
-                method = PaymentMethod.CARD,
+                // Captured incomes are transfers/deposits by default; expenses
+                // are card charges. Cash never notifies — the user can switch.
+                method = if (pending.type == TransactionType.INCOME) {
+                    PaymentMethod.TRANSFER
+                } else {
+                    PaymentMethod.CARD
+                },
                 last4 = matchedLast4.orEmpty(),
                 date = pending.occurredAt.toLocalDateTime(timeZone).date,
                 merchant = pending.merchant.orEmpty(),
@@ -308,6 +329,7 @@ class AddTransactionViewModel @Inject constructor(
 
     private fun validate(currentForm: Form) = AddTransactionValidator.validate(
         amountPesos = currentForm.amountDigits.toLongOrNull(),
+        type = currentForm.type,
         method = currentForm.method,
         last4 = currentForm.last4,
         categoryId = currentForm.categoryId,

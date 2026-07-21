@@ -66,6 +66,7 @@ import dev.romerobrayan.tinto.core.designsystem.theme.ButtonShape
 import dev.romerobrayan.tinto.core.designsystem.theme.LocalTintoColors
 import dev.romerobrayan.tinto.core.designsystem.theme.LocalTintoTypography
 import dev.romerobrayan.tinto.core.designsystem.theme.PillShape
+import dev.romerobrayan.tinto.core.domain.model.Card
 import dev.romerobrayan.tinto.core.domain.model.Money
 import dev.romerobrayan.tinto.core.domain.model.PaymentMethod
 import dev.romerobrayan.tinto.core.domain.model.TransactionType
@@ -90,6 +91,7 @@ fun AddTransactionScreen(
         onTypeChanged = viewModel::onTypeChanged,
         onMethodChanged = viewModel::onMethodChanged,
         onLast4Changed = viewModel::onLast4Changed,
+        onCardSelected = viewModel::onCardSelected,
         onCategorySelected = viewModel::onCategorySelected,
         onDateChanged = viewModel::onDateChanged,
         onMerchantChanged = viewModel::onMerchantChanged,
@@ -108,6 +110,7 @@ private fun AddTransactionContent(
     onTypeChanged: (TransactionType) -> Unit,
     onMethodChanged: (PaymentMethod) -> Unit,
     onLast4Changed: (String) -> Unit,
+    onCardSelected: (Card) -> Unit,
     onCategorySelected: (String) -> Unit,
     onDateChanged: (LocalDate) -> Unit,
     onMerchantChanged: (String) -> Unit,
@@ -181,44 +184,71 @@ private fun AddTransactionContent(
             color = MaterialTheme.colorScheme.onBackground,
         )
         Spacer(Modifier.height(8.dp))
-        Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
-            TintoSelectorPill(
-                label = stringResource(R.string.add_method_cash),
-                selected = state.method == PaymentMethod.CASH,
-                onClick = { onMethodChanged(PaymentMethod.CASH) },
-            )
-            TintoSelectorPill(
-                label = stringResource(R.string.add_method_card),
-                selected = state.method == PaymentMethod.CARD,
-                onClick = { onMethodChanged(PaymentMethod.CARD) },
-            )
-        }
-
-        if (state.method == PaymentMethod.CARD) {
-            Spacer(Modifier.height(12.dp))
-            Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+        if (state.type == TransactionType.INCOME) {
+            // Ingreso: Efectivo / Transferencia / cada tarjeta registrada. Se
+            // elige la tarjeta (sin pedir los 4 dígitos) — no hay campo manual.
+            FlowRow(
+                horizontalArrangement = Arrangement.spacedBy(6.dp),
+                verticalArrangement = Arrangement.spacedBy(8.dp),
+            ) {
+                TintoSelectorPill(
+                    label = stringResource(R.string.add_method_cash),
+                    selected = state.method == PaymentMethod.CASH,
+                    onClick = { onMethodChanged(PaymentMethod.CASH) },
+                )
+                TintoSelectorPill(
+                    label = stringResource(R.string.add_method_transfer),
+                    selected = state.method == PaymentMethod.TRANSFER,
+                    onClick = { onMethodChanged(PaymentMethod.TRANSFER) },
+                )
                 state.cards.forEach { card ->
                     TintoSelectorPill(
                         label = "${card.bank} ${stringResource(R.string.card_mask, card.last4)}",
-                        selected = state.last4 == card.last4,
-                        onClick = { onLast4Changed(card.last4) },
+                        selected = state.method == PaymentMethod.CARD && state.last4 == card.last4,
+                        onClick = { onCardSelected(card) },
                     )
                 }
             }
-            Spacer(Modifier.height(12.dp))
-            TextField(
-                value = state.last4,
-                onValueChange = onLast4Changed,
-                label = { Text(stringResource(R.string.add_last4_label)) },
-                singleLine = true,
-                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
-                colors = tintoTextFieldColors(),
-                shape = ButtonShape,
-                modifier = Modifier.fillMaxWidth(),
-            )
-            if (AddTransactionValidator.Error.LAST4_INVALID in state.errors) {
-                Spacer(Modifier.height(4.dp))
-                ErrorText(stringResource(R.string.add_error_last4))
+        } else {
+            Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+                TintoSelectorPill(
+                    label = stringResource(R.string.add_method_cash),
+                    selected = state.method == PaymentMethod.CASH,
+                    onClick = { onMethodChanged(PaymentMethod.CASH) },
+                )
+                TintoSelectorPill(
+                    label = stringResource(R.string.add_method_card),
+                    selected = state.method == PaymentMethod.CARD,
+                    onClick = { onMethodChanged(PaymentMethod.CARD) },
+                )
+            }
+
+            if (state.method == PaymentMethod.CARD) {
+                Spacer(Modifier.height(12.dp))
+                Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                    state.cards.forEach { card ->
+                        TintoSelectorPill(
+                            label = "${card.bank} ${stringResource(R.string.card_mask, card.last4)}",
+                            selected = state.last4 == card.last4,
+                            onClick = { onLast4Changed(card.last4) },
+                        )
+                    }
+                }
+                Spacer(Modifier.height(12.dp))
+                TextField(
+                    value = state.last4,
+                    onValueChange = onLast4Changed,
+                    label = { Text(stringResource(R.string.add_last4_label)) },
+                    singleLine = true,
+                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+                    colors = tintoTextFieldColors(),
+                    shape = ButtonShape,
+                    modifier = Modifier.fillMaxWidth(),
+                )
+                if (AddTransactionValidator.Error.LAST4_INVALID in state.errors) {
+                    Spacer(Modifier.height(4.dp))
+                    ErrorText(stringResource(R.string.add_error_last4))
+                }
             }
         }
 

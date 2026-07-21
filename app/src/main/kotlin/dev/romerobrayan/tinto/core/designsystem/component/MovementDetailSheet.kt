@@ -92,6 +92,7 @@ fun MovementDetailSheet(
                 DetailValue(
                     when {
                         item.isCash -> stringResource(R.string.method_cash)
+                        item.isTransfer -> stringResource(R.string.method_transfer)
                         item.cardLast4 != null -> stringResource(R.string.card_mask, item.cardLast4)
                         else -> stringResource(R.string.add_method_card)
                     },
