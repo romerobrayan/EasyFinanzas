@@ -29,6 +29,8 @@ import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Switch
+import androidx.compose.material3.SwitchDefaults
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.TextField
@@ -61,6 +63,7 @@ import dev.romerobrayan.tinto.core.designsystem.component.CategoryIcon
 import dev.romerobrayan.tinto.core.designsystem.component.TintoConfirmDialog
 import dev.romerobrayan.tinto.core.designsystem.component.TintoDatePickerDialog
 import dev.romerobrayan.tinto.core.designsystem.component.TintoSelectorPill
+import dev.romerobrayan.tinto.core.designsystem.component.frequencyLabelRes
 import dev.romerobrayan.tinto.core.designsystem.component.tintoTextFieldColors
 import dev.romerobrayan.tinto.core.designsystem.theme.ButtonShape
 import dev.romerobrayan.tinto.core.designsystem.theme.LocalTintoColors
@@ -69,6 +72,7 @@ import dev.romerobrayan.tinto.core.designsystem.theme.PillShape
 import dev.romerobrayan.tinto.core.domain.model.Card
 import dev.romerobrayan.tinto.core.domain.model.Money
 import dev.romerobrayan.tinto.core.domain.model.PaymentMethod
+import dev.romerobrayan.tinto.core.domain.model.TransactionFrequency
 import dev.romerobrayan.tinto.core.domain.model.TransactionType
 import kotlinx.datetime.LocalDate
 
@@ -95,6 +99,8 @@ fun AddTransactionScreen(
         onCategorySelected = viewModel::onCategorySelected,
         onDateChanged = viewModel::onDateChanged,
         onMerchantChanged = viewModel::onMerchantChanged,
+        onAutomateToggled = viewModel::onAutomateToggled,
+        onFrequencyChanged = viewModel::onFrequencyChanged,
         onSubmit = viewModel::onSubmit,
         onDiscardPending = viewModel::onDiscardPending,
         modifier = modifier,
@@ -114,6 +120,8 @@ private fun AddTransactionContent(
     onCategorySelected: (String) -> Unit,
     onDateChanged: (LocalDate) -> Unit,
     onMerchantChanged: (String) -> Unit,
+    onAutomateToggled: (Boolean) -> Unit,
+    onFrequencyChanged: (TransactionFrequency) -> Unit,
     onSubmit: () -> Unit,
     onDiscardPending: () -> Unit,
     modifier: Modifier = Modifier,
@@ -321,6 +329,55 @@ private fun AddTransactionContent(
             shape = ButtonShape,
             modifier = Modifier.fillMaxWidth(),
         )
+
+        Spacer(Modifier.height(24.dp))
+        Row(verticalAlignment = Alignment.CenterVertically) {
+            Column(Modifier.weight(1f)) {
+                Text(
+                    text = stringResource(R.string.add_automate_label),
+                    style = type.sectionTitle,
+                    color = MaterialTheme.colorScheme.onBackground,
+                )
+                Spacer(Modifier.height(2.dp))
+                Text(
+                    text = stringResource(R.string.add_automate_hint),
+                    style = type.caption,
+                    color = tinto.muted,
+                )
+            }
+            Spacer(Modifier.width(12.dp))
+            Switch(
+                checked = state.automate,
+                onCheckedChange = onAutomateToggled,
+                colors = SwitchDefaults.colors(
+                    checkedThumbColor = MaterialTheme.colorScheme.onPrimary,
+                    checkedTrackColor = MaterialTheme.colorScheme.primary,
+                    uncheckedThumbColor = tinto.muted,
+                    uncheckedTrackColor = MaterialTheme.colorScheme.surfaceVariant,
+                ),
+            )
+        }
+        if (state.automate) {
+            Spacer(Modifier.height(12.dp))
+            Text(
+                text = stringResource(R.string.add_automate_frequency_label),
+                style = type.caption,
+                color = tinto.muted,
+            )
+            Spacer(Modifier.height(8.dp))
+            FlowRow(
+                horizontalArrangement = Arrangement.spacedBy(6.dp),
+                verticalArrangement = Arrangement.spacedBy(8.dp),
+            ) {
+                TransactionFrequency.entries.forEach { frequency ->
+                    TintoSelectorPill(
+                        label = stringResource(frequencyLabelRes(frequency)),
+                        selected = state.frequency == frequency,
+                        onClick = { onFrequencyChanged(frequency) },
+                    )
+                }
+            }
+        }
 
         Spacer(Modifier.height(28.dp))
         Button(

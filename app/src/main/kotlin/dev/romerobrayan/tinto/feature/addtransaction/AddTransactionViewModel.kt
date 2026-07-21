@@ -9,6 +9,8 @@ import dev.romerobrayan.tinto.core.common.TintoAnalytics
 import dev.romerobrayan.tinto.core.domain.model.Category
 import dev.romerobrayan.tinto.core.domain.model.Money
 import dev.romerobrayan.tinto.core.domain.model.PaymentMethod
+import dev.romerobrayan.tinto.core.domain.model.RecurringRule
+import dev.romerobrayan.tinto.core.domain.model.TransactionFrequency
 import dev.romerobrayan.tinto.core.domain.model.toCategoryScope
 import dev.romerobrayan.tinto.core.domain.model.PendingTransaction
 import dev.romerobrayan.tinto.core.domain.model.Transaction
@@ -18,7 +20,9 @@ import dev.romerobrayan.tinto.core.domain.model.asTransactionSource
 import dev.romerobrayan.tinto.core.domain.repository.CardRepository
 import dev.romerobrayan.tinto.core.domain.repository.CategoryRepository
 import dev.romerobrayan.tinto.core.domain.repository.PendingTransactionRepository
+import dev.romerobrayan.tinto.core.domain.repository.RecurringRuleRepository
 import dev.romerobrayan.tinto.core.domain.repository.TransactionRepository
+import dev.romerobrayan.tinto.core.domain.usecase.plusFrequency
 import dev.romerobrayan.tinto.navigation.AddTransactionRoute
 import java.util.UUID
 import javax.inject.Inject
@@ -48,6 +52,7 @@ class AddTransactionViewModel @Inject constructor(
     private val cardRepository: CardRepository,
     categoryRepository: CategoryRepository,
     private val pendingRepository: PendingTransactionRepository,
+    private val recurringRuleRepository: RecurringRuleRepository,
     private val analytics: TintoAnalytics,
 ) : ViewModel() {
 
@@ -79,6 +84,9 @@ class AddTransactionViewModel @Inject constructor(
         /** null = today (kept relative so the default follows the clock). */
         val date: LocalDate? = null,
         val merchant: String = "",
+        /** When on, saving also creates a [RecurringRule] on [frequency]. */
+        val automate: Boolean = false,
+        val frequency: TransactionFrequency = TransactionFrequency.MONTHLY,
         val submitAttempted: Boolean = false,
     )
 
@@ -119,6 +127,8 @@ class AddTransactionViewModel @Inject constructor(
             merchant = currentForm.merchant,
             categories = scopedCategories,
             cards = cards,
+            automate = currentForm.automate,
+            frequency = currentForm.frequency,
             errors = if (currentForm.submitAttempted) validate(currentForm) else emptySet(),
         )
     }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), AddTransactionUiState())
@@ -170,6 +180,11 @@ class AddTransactionViewModel @Inject constructor(
 
     fun onMerchantChanged(value: String) = form.update { it.copy(merchant = value) }
 
+    fun onAutomateToggled(enabled: Boolean) = form.update { it.copy(automate = enabled) }
+
+    fun onFrequencyChanged(frequency: TransactionFrequency) =
+        form.update { it.copy(frequency = frequency) }
+
     fun onSubmit() {
         val currentForm = form.value
         if (validate(currentForm).isNotEmpty()) {
@@ -189,83 +204,116 @@ class AddTransactionViewModel @Inject constructor(
             } else {
                 null
             }
+            val merchant = currentForm.merchant.trim().ifEmpty { null }
+            val amount = Money.ofPesos(currentForm.amountDigits.toLong())
+            val categoryId = requireNotNull(currentForm.categoryId)
             val confirming = originalPending
-            if (confirming != null) {
-                val pendingDate = confirming.occurredAt.toLocalDateTime(timeZone).date
-                transactionRepository.addTransaction(
-                    Transaction(
-                        id = UUID.randomUUID().toString(),
-                        type = currentForm.type,
-                        amount = Money.ofPesos(currentForm.amountDigits.toLong()),
-                        method = currentForm.method,
-                        cardId = matchedCard?.id,
-                        bank = if (currentForm.method == PaymentMethod.CARD) {
-                            matchedCard?.bank ?: confirming.bank
-                        } else {
-                            null
-                        },
-                        categoryId = requireNotNull(currentForm.categoryId),
-                        merchant = currentForm.merchant.trim().ifEmpty { null },
-                        // The parsed instant is the truth for an unchanged day;
-                        // a moved date lands at noon (or now, when today).
-                        occurredAt = when (date) {
-                            pendingDate -> confirming.occurredAt
-                            today -> now
-                            else -> date.atTime(12, 0).toInstant(timeZone)
-                        },
-                        // Provenance preserved — never rewritten to MANUAL.
-                        source = confirming.channel.asTransactionSource(),
-                        createdAt = now,
-                        updatedAt = now,
-                    ),
-                )
-                pendingRepository.markConfirmed(confirming.id)
-                analytics.logPendingConfirmed(1)
-                _saved.tryEmit(Unit)
-                return@launch
-            }
             val editing = original
-            if (editing != null) {
-                val originalDate = editing.occurredAt.toLocalDateTime(timeZone).date
-                transactionRepository.updateTransaction(
-                    editing.copy(
-                        type = currentForm.type,
-                        amount = Money.ofPesos(currentForm.amountDigits.toLong()),
-                        method = currentForm.method,
-                        cardId = matchedCard?.id,
-                        bank = matchedCard?.bank,
-                        categoryId = requireNotNull(currentForm.categoryId),
-                        merchant = currentForm.merchant.trim().ifEmpty { null },
-                        // Unchanged day keeps the original instant; a moved date
-                        // lands at noon (or now, when moved to today). createdAt
-                        // and source ride along untouched via copy().
-                        occurredAt = when (date) {
-                            originalDate -> editing.occurredAt
-                            today -> now
-                            else -> date.atTime(12, 0).toInstant(timeZone)
-                        },
-                        updatedAt = now,
-                    ),
-                )
-                analytics.logEditTransaction(currentForm.type.name, currentForm.method.name)
-            } else {
-                transactionRepository.addTransaction(
-                    Transaction(
+            when {
+                confirming != null -> {
+                    val pendingDate = confirming.occurredAt.toLocalDateTime(timeZone).date
+                    transactionRepository.addTransaction(
+                        Transaction(
+                            id = UUID.randomUUID().toString(),
+                            type = currentForm.type,
+                            amount = amount,
+                            method = currentForm.method,
+                            cardId = matchedCard?.id,
+                            bank = if (currentForm.method == PaymentMethod.CARD) {
+                                matchedCard?.bank ?: confirming.bank
+                            } else {
+                                null
+                            },
+                            categoryId = categoryId,
+                            merchant = merchant,
+                            // The parsed instant is the truth for an unchanged day;
+                            // a moved date lands at noon (or now, when today).
+                            occurredAt = when (date) {
+                                pendingDate -> confirming.occurredAt
+                                today -> now
+                                else -> date.atTime(12, 0).toInstant(timeZone)
+                            },
+                            // Provenance preserved — never rewritten to MANUAL.
+                            source = confirming.channel.asTransactionSource(),
+                            createdAt = now,
+                            updatedAt = now,
+                        ),
+                    )
+                    pendingRepository.markConfirmed(confirming.id)
+                    analytics.logPendingConfirmed(1)
+                }
+
+                editing != null -> {
+                    val originalDate = editing.occurredAt.toLocalDateTime(timeZone).date
+                    transactionRepository.updateTransaction(
+                        editing.copy(
+                            type = currentForm.type,
+                            amount = amount,
+                            method = currentForm.method,
+                            cardId = matchedCard?.id,
+                            bank = matchedCard?.bank,
+                            categoryId = categoryId,
+                            merchant = merchant,
+                            // Unchanged day keeps the original instant; a moved date
+                            // lands at noon (or now, when moved to today). createdAt
+                            // and source ride along untouched via copy().
+                            occurredAt = when (date) {
+                                originalDate -> editing.occurredAt
+                                today -> now
+                                else -> date.atTime(12, 0).toInstant(timeZone)
+                            },
+                            updatedAt = now,
+                        ),
+                    )
+                    analytics.logEditTransaction(currentForm.type.name, currentForm.method.name)
+                }
+
+                else -> {
+                    transactionRepository.addTransaction(
+                        Transaction(
+                            id = UUID.randomUUID().toString(),
+                            type = currentForm.type,
+                            amount = amount,
+                            method = currentForm.method,
+                            cardId = matchedCard?.id,
+                            bank = matchedCard?.bank,
+                            categoryId = categoryId,
+                            merchant = merchant,
+                            occurredAt = if (date == today) now else date.atTime(12, 0).toInstant(timeZone),
+                            source = TransactionSource.MANUAL,
+                            createdAt = now,
+                            updatedAt = now,
+                        ),
+                    )
+                    analytics.logAddTransaction(currentForm.type.name, currentForm.method.name)
+                }
+            }
+
+            // The entered movement is occurrence #1; the rule generates the
+            // rest, starting at the next slot after this date. Available in
+            // add / edit / confirm alike.
+            if (currentForm.automate) {
+                recurringRuleRepository.upsertRule(
+                    RecurringRule(
                         id = UUID.randomUUID().toString(),
                         type = currentForm.type,
-                        amount = Money.ofPesos(currentForm.amountDigits.toLong()),
+                        amount = amount,
                         method = currentForm.method,
                         cardId = matchedCard?.id,
                         bank = matchedCard?.bank,
-                        categoryId = requireNotNull(currentForm.categoryId),
-                        merchant = currentForm.merchant.trim().ifEmpty { null },
-                        occurredAt = if (date == today) now else date.atTime(12, 0).toInstant(timeZone),
-                        source = TransactionSource.MANUAL,
+                        categoryId = categoryId,
+                        merchant = merchant,
+                        frequency = currentForm.frequency,
+                        anchorDate = date,
+                        // DAILY/WEEKLY/MONTHLY → date + one period; SEMIMONTHLY →
+                        // the next 15th/last-day slot. plusFrequency covers both.
+                        nextOccurrence = date.plusFrequency(currentForm.frequency),
+                        isActive = true,
                         createdAt = now,
                         updatedAt = now,
                     ),
                 )
-                analytics.logAddTransaction(currentForm.type.name, currentForm.method.name)
+                analytics.logRecurringRuleCreated(currentForm.frequency.name)
             }
             _saved.tryEmit(Unit)
         }

@@ -200,5 +200,6 @@ private fun sourceLabel(source: TransactionSource): String = stringResource(
         TransactionSource.NOTIFICATION -> R.string.source_notification
         TransactionSource.EMAIL -> R.string.source_email
         TransactionSource.SMS -> R.string.source_sms
+        TransactionSource.RECURRING -> R.string.source_recurring
     },
 )

@@ -25,6 +25,10 @@ data class AddTransactionRoute(
 @Serializable
 data object PendingRoute
 
+/** The automation-rules manager (Sprint 5): pause/resume or delete rules. */
+@Serializable
+data object RecurringRulesRoute
+
 @Serializable
 data object RemindersRoute
 

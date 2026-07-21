@@ -7,8 +7,10 @@ import dev.romerobrayan.tinto.core.domain.model.CategoryScope
 import dev.romerobrayan.tinto.core.domain.model.Money
 import dev.romerobrayan.tinto.core.domain.model.PaymentMethod
 import dev.romerobrayan.tinto.core.domain.model.Recurrence
+import dev.romerobrayan.tinto.core.domain.model.RecurringRule
 import dev.romerobrayan.tinto.core.domain.model.Reminder
 import dev.romerobrayan.tinto.core.domain.model.Transaction
+import dev.romerobrayan.tinto.core.domain.model.TransactionFrequency
 import dev.romerobrayan.tinto.core.domain.model.TransactionSource
 import dev.romerobrayan.tinto.core.domain.model.TransactionType
 import kotlinx.datetime.Instant
@@ -49,7 +51,10 @@ internal fun DocumentSnapshot.toTransaction(): Transaction? = runCatching {
         categoryId = getString("categoryId") ?: return null,
         merchant = getString("merchant"),
         occurredAt = occurredAt,
-        source = getString("source")?.let(TransactionSource::valueOf) ?: TransactionSource.MANUAL,
+        // Tolerant: an unknown/newer source degrades to MANUAL rather than
+        // dropping the whole movement.
+        source = getString("source")?.let { runCatching { TransactionSource.valueOf(it) }.getOrNull() }
+            ?: TransactionSource.MANUAL,
         createdAt = getLong("createdAt")?.let(Instant::fromEpochMilliseconds) ?: occurredAt,
         updatedAt = getLong("updatedAt")?.let(Instant::fromEpochMilliseconds) ?: occurredAt,
     )
@@ -73,6 +78,46 @@ internal fun DocumentSnapshot.toCategory(): Category? = runCatching {
         // Additive field: rows written before Sprint 5 have no "scope" → expense.
         scope = getString("scope")?.let { runCatching { CategoryScope.valueOf(it) }.getOrNull() }
             ?: CategoryScope.EXPENSE,
+    )
+}.getOrNull()
+
+internal fun RecurringRule.toFirestoreMap(): Map<String, Any?> = mapOf(
+    "type" to type.name,
+    "amountCents" to amount.cents,
+    "method" to method.name,
+    "cardId" to cardId,
+    "bank" to bank,
+    "categoryId" to categoryId,
+    "merchant" to merchant,
+    "frequency" to frequency.name,
+    "anchorDate" to anchorDate.toString(),
+    "nextOccurrence" to nextOccurrence.toString(),
+    "isActive" to isActive,
+    "createdAt" to createdAt.toEpochMilliseconds(),
+    "updatedAt" to updatedAt.toEpochMilliseconds(),
+)
+
+internal fun DocumentSnapshot.toRecurringRule(): RecurringRule? = runCatching {
+    val createdAt = getLong("createdAt")?.let(Instant::fromEpochMilliseconds) ?: return null
+    RecurringRule(
+        id = id,
+        // Unknown enum values fall back safely so one odd row never crashes.
+        type = getString("type")?.let { runCatching { TransactionType.valueOf(it) }.getOrNull() }
+            ?: return null,
+        amount = Money(getLong("amountCents") ?: return null),
+        method = getString("method")?.let { runCatching { PaymentMethod.valueOf(it) }.getOrNull() }
+            ?: PaymentMethod.CASH,
+        cardId = getString("cardId"),
+        bank = getString("bank"),
+        categoryId = getString("categoryId") ?: return null,
+        merchant = getString("merchant"),
+        frequency = getString("frequency")?.let { runCatching { TransactionFrequency.valueOf(it) }.getOrNull() }
+            ?: return null,
+        anchorDate = LocalDate.parse(getString("anchorDate") ?: return null),
+        nextOccurrence = LocalDate.parse(getString("nextOccurrence") ?: return null),
+        isActive = getBoolean("isActive") ?: true,
+        createdAt = createdAt,
+        updatedAt = getLong("updatedAt")?.let(Instant::fromEpochMilliseconds) ?: createdAt,
     )
 }.getOrNull()
 
