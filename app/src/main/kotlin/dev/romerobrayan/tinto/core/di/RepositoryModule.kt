@@ -6,6 +6,7 @@ import dagger.hilt.InstallIn
 import dagger.hilt.components.SingletonComponent
 import dev.romerobrayan.tinto.core.data.auth.FirebaseAuthRepository
 import dev.romerobrayan.tinto.core.data.capture.SmsCaptureManager
+import dev.romerobrayan.tinto.core.data.capture.notification.NotificationCaptureManager
 import dev.romerobrayan.tinto.core.data.capture.parser.RuleBasedTransactionParser
 import dev.romerobrayan.tinto.core.data.repository.RoomPendingTransactionRepository
 import dev.romerobrayan.tinto.core.data.repository.SyncedCardRepository
@@ -16,6 +17,7 @@ import dev.romerobrayan.tinto.core.domain.repository.AuthRepository
 import dev.romerobrayan.tinto.core.domain.repository.CardRepository
 import dev.romerobrayan.tinto.core.domain.repository.CategoryRepository
 import dev.romerobrayan.tinto.core.domain.repository.PendingTransactionRepository
+import dev.romerobrayan.tinto.core.domain.repository.NotificationCapture
 import dev.romerobrayan.tinto.core.domain.repository.ReminderRepository
 import dev.romerobrayan.tinto.core.domain.repository.SmsCapture
 import dev.romerobrayan.tinto.core.domain.repository.TransactionParser
@@ -58,4 +60,7 @@ abstract class RepositoryModule {
 
     @Binds
     abstract fun bindSmsCapture(impl: SmsCaptureManager): SmsCapture
+
+    @Binds
+    abstract fun bindNotificationCapture(impl: NotificationCaptureManager): NotificationCapture
 }

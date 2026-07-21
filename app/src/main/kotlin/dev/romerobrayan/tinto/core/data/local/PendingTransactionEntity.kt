@@ -41,8 +41,20 @@ data class PendingTransactionEntity(
         const val STATUS_CONFIRMED = "CONFIRMED"
         const val STATUS_DISCARDED = "DISCARDED"
 
-        fun dedupKeyOf(pending: PendingTransaction): String =
-            "${pending.issuer}|${pending.occurredAt.toEpochMilliseconds()}|${pending.rawBody.hashCode()}"
+        fun dedupKeyOf(pending: PendingTransaction): String {
+            // A notification storm re-posts the same content with a nudged
+            // postTime; bucketing the timestamp keeps every re-emission on one
+            // key. SMS keeps exact millis (unchanged for existing rows).
+            val timeKey = when (pending.channel) {
+                CaptureChannel.NOTIFICATION ->
+                    "b${pending.occurredAt.toEpochMilliseconds() / NOTIFICATION_DEDUP_BUCKET_MS}"
+
+                else -> pending.occurredAt.toEpochMilliseconds().toString()
+            }
+            return "${pending.issuer}|$timeKey|${pending.rawBody.hashCode()}"
+        }
+
+        private const val NOTIFICATION_DEDUP_BUCKET_MS = 10 * 60 * 1000L
     }
 }
 

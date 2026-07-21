@@ -29,7 +29,7 @@ data class IssuerRule(
     val issuer: String,
     /** Bank name written into promoted movements; null when unknown. */
     val bank: String?,
-    /** Sender addresses (digits only) this rule owns. */
+    /** Senders this rule owns: SMS shortcodes (digits) or app package names. */
     val senders: Set<String>,
     val amountConvention: AmountConvention,
     /** Checked in order; the first match wins. */

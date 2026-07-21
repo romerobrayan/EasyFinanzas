@@ -43,8 +43,8 @@ interface TintoAnalytics {
     /** [recurrence] only — a reminder notification fired on the device. */
     fun logReminderNotificationShown(recurrence: String)
 
-    /** The user granted the SMS capture permissions (event alone, no params). */
-    fun logCapturePermissionGranted()
+    /** The user enabled a capture source; [channel] is the coarse enum name only. */
+    fun logCapturePermissionGranted(channel: String)
 
     /** [channel] + [issuer] only — never amounts, merchants, senders or raw text. */
     fun logCaptureDetected(channel: String, issuer: String)

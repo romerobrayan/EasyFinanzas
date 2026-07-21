@@ -74,8 +74,8 @@ class FirebaseTintoAnalytics @Inject constructor() : TintoAnalytics {
         analytics.logEvent("reminder_notification_shown", bundleOf("recurrence" to recurrence))
     }
 
-    override fun logCapturePermissionGranted() {
-        analytics.logEvent("capture_permission_granted", null)
+    override fun logCapturePermissionGranted(channel: String) {
+        analytics.logEvent("capture_permission_granted", bundleOf("channel" to channel))
     }
 
     override fun logCaptureDetected(channel: String, issuer: String) {

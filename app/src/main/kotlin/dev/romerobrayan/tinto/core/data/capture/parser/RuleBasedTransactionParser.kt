@@ -23,7 +23,10 @@ class RuleBasedTransactionParser @Inject constructor() : TransactionParser {
             .toMap()
 
     override fun parse(raw: RawCapture): ParseResult {
-        val rule = rulesBySender[raw.sender.filter(Char::isDigit)]
+        // Verbatim first (notification package names), then digits-only (SMS
+        // shortcodes arrive with carrier prefixes/formatting around them).
+        val rule = rulesBySender[raw.sender]
+            ?: raw.sender.filter(Char::isDigit).takeIf(String::isNotEmpty)?.let(rulesBySender::get)
             ?: return ParseResult.Unrecognized
 
         rule.dropPatterns.firstOrNull { it.regex.containsMatchIn(raw.body) }

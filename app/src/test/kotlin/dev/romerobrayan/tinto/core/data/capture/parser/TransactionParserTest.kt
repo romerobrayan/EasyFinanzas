@@ -16,8 +16,9 @@ import org.junit.Test
 
 /**
  * Table-driven tests over the verbatim sample messages in
- * TASK_SPRINT_3_CAPTURE.md — amounts in both separator conventions (with and
- * without decimals), all three date layouts, direction, last4 extraction,
+ * TASK_SPRINT_3_CAPTURE.md and the Sprint 4 appendix — amounts in both
+ * separator conventions (with and without decimals), all three date layouts,
+ * relative dates falling back to receivedAt, direction, last4 extraction,
  * and the drop cases.
  */
 class TransactionParserTest {
@@ -29,8 +30,21 @@ class TransactionParserTest {
     private fun sms(sender: String, body: String) =
         RawCapture(sender = sender, body = body, receivedAt = receivedAt, channel = CaptureChannel.SMS)
 
+    private fun nuNotification(body: String) = RawCapture(
+        sender = IssuerRules.NU_PACKAGE_NAME,
+        body = body,
+        receivedAt = receivedAt,
+        channel = CaptureChannel.NOTIFICATION,
+    )
+
     private fun parseRecognized(sender: String, body: String): PendingTransaction {
         val result = parser.parse(sms(sender, body))
+        assertTrue("expected Recognized, got $result", result is ParseResult.Recognized)
+        return (result as ParseResult.Recognized).pending
+    }
+
+    private fun parseNuRecognized(body: String): PendingTransaction {
+        val result = parser.parse(nuNotification(body))
         assertTrue("expected Recognized, got $result", result is ParseResult.Recognized)
         return (result as ParseResult.Recognized).pending
     }
@@ -167,7 +181,86 @@ class TransactionParserTest {
         assertEquals(instantOf(2026, 7, 16, 10, 8, 8), pending.occurredAt)
     }
 
+    // ---- Nu (app package, NOTIFICATION) — Colombian amounts, relative dates ----
+
+    @Test
+    fun `nu card purchase stages as expense with last4 and receivedAt fallback`() {
+        val pending = parseNuRecognized(
+            "Compra aprobada por \$13.300,00 - Tu compra en GOOGLE YouTube por \$13.300,00 " +
+                "con tu tarjeta terminada en 3101 ha sido APROBADA.",
+        )
+        assertEquals(TransactionType.EXPENSE, pending.type)
+        assertEquals(Money.ofPesos(13_300), pending.amount)
+        assertEquals("3101", pending.last4)
+        assertEquals("GOOGLE YouTube", pending.merchant)
+        // Relative dates ("Hoy • 11:40") carry no absolute date → postTime.
+        assertEquals(receivedAt, pending.occurredAt)
+        assertEquals("Nu", pending.issuer)
+        assertEquals("NU Bank", pending.bank)
+        assertEquals(CaptureChannel.NOTIFICATION, pending.channel)
+    }
+
+    @Test
+    fun `nu account payment stages as expense without a card mask`() {
+        val pending = parseNuRecognized(
+            "Pago aprobado por \$180.720,00 - Pagaste en GLOBAL COLOMBIA 81 SA con tu cuenta " +
+                "de ahorros. Si tienes dudas contáctanos via chat.",
+        )
+        assertEquals(TransactionType.EXPENSE, pending.type)
+        assertEquals(Money.ofPesos(180_720), pending.amount)
+        assertNull(pending.last4)
+        assertEquals("GLOBAL COLOMBIA 81 SA", pending.merchant)
+        assertEquals(receivedAt, pending.occurredAt)
+    }
+
+    @Test
+    fun `nu credit card bill payment stages as expense so the duplicate warning can flag it`() {
+        val pending = parseNuRecognized(
+            "¡Bravo! Pagaste tu tarjeta de crédito Nu. Recibimos tu pago por \$357.509,00. " +
+                "En un rato podrás verlo en tu app.",
+        )
+        assertEquals(TransactionType.EXPENSE, pending.type)
+        assertEquals(Money.ofPesos(357_509), pending.amount)
+        assertNull(pending.last4)
+        assertNull(pending.merchant)
+        assertEquals(receivedAt, pending.occurredAt)
+    }
+
+    @Test
+    fun `nu parse still matches with the notification title prefixed to the text`() {
+        val pending = parseNuRecognized(
+            "Nu Compra aprobada por \$13.300,00 - Tu compra en GOOGLE YouTube por \$13.300,00 " +
+                "con tu tarjeta terminada en 3101 ha sido APROBADA.",
+        )
+        assertEquals(Money.ofPesos(13_300), pending.amount)
+        assertEquals("3101", pending.last4)
+    }
+
     // ---- Drops ----
+
+    @Test
+    fun `nu payment request is ignored with a reason`() {
+        val result = parser.parse(
+            nuNotification(
+                "Tienes un pago por \$180.000,00 de GLOBAL COLOMBIA 81 SA. Completa tu pago " +
+                    "de forma fácil y segura en tu app Nu.",
+            ),
+        )
+        assertTrue("expected Ignored, got $result", result is ParseResult.Ignored)
+    }
+
+    @Test
+    fun `unknown package is unrecognized`() {
+        val result = parser.parse(
+            RawCapture(
+                sender = "com.example.otherbank",
+                body = "Compra aprobada por \$13.300,00 con tu tarjeta terminada en 3101",
+                receivedAt = receivedAt,
+                channel = CaptureChannel.NOTIFICATION,
+            ),
+        )
+        assertEquals(ParseResult.Unrecognized, result)
+    }
 
     @Test
     fun `onecero1 pin change is ignored with a reason`() {

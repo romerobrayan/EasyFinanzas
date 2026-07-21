@@ -1,6 +1,8 @@
 package dev.romerobrayan.tinto.feature.profile
 
 import android.Manifest
+import android.content.Intent
+import android.provider.Settings
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.background
@@ -39,11 +41,13 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.lifecycle.compose.LifecycleResumeEffect
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import dev.romerobrayan.tinto.R
 import dev.romerobrayan.tinto.core.designsystem.component.TintoConfirmDialog
@@ -60,8 +64,26 @@ fun ProfileScreen(
     viewModel: ProfileViewModel = hiltViewModel(),
 ) {
     val state by viewModel.uiState.collectAsStateWithLifecycle()
+    val context = LocalContext.current
     var showCaptureExplainer by rememberSaveable { mutableStateOf(false) }
     var showCaptureDisableConfirm by rememberSaveable { mutableStateOf(false) }
+    var showNotificationExplainer by rememberSaveable { mutableStateOf(false) }
+    var showNotificationDisableConfirm by rememberSaveable { mutableStateOf(false) }
+    // True between confirming the notification explainer and returning from
+    // the system notification-access settings screen.
+    var awaitingNotificationAccess by rememberSaveable { mutableStateOf(false) }
+
+    // Notification access is granted/revoked in system settings, outside the
+    // app — re-check it on every return to the screen.
+    LifecycleResumeEffect(Unit) {
+        if (awaitingNotificationAccess) {
+            awaitingNotificationAccess = false
+            viewModel.onNotificationOptInReturned()
+        } else {
+            viewModel.onScreenResumed()
+        }
+        onPauseOrDispose { }
+    }
 
     // Platform-call exception (like the login credential picker): the runtime
     // permission prompt needs the Activity, so the screen owns the launcher
@@ -84,6 +106,14 @@ fun ProfileScreen(
                 showCaptureDisableConfirm = true
             } else {
                 showCaptureExplainer = true
+            }
+        },
+        onNotificationCaptureClick = {
+            if (state.notificationCaptureEnabled && state.notificationAccessGranted) {
+                showNotificationDisableConfirm = true
+            } else {
+                // Covers both "off" and "opted in but access revoked".
+                showNotificationExplainer = true
             }
         },
         modifier = modifier,
@@ -118,6 +148,41 @@ fun ProfileScreen(
         )
     }
 
+    if (showNotificationExplainer) {
+        TintoConfirmDialog(
+            title = stringResource(R.string.capture_notification_explainer_title),
+            message = stringResource(R.string.capture_notification_explainer_message),
+            confirmLabel = stringResource(R.string.capture_notification_explainer_confirm),
+            onConfirm = {
+                showNotificationExplainer = false
+                if (state.notificationAccessGranted) {
+                    viewModel.onNotificationAccessGranted()
+                } else {
+                    // Platform-call exception (like the SMS permission launcher):
+                    // notification access lives in system settings, so the
+                    // screen owns the deep link and reports the result back.
+                    awaitingNotificationAccess = true
+                    context.startActivity(Intent(Settings.ACTION_NOTIFICATION_LISTENER_SETTINGS))
+                }
+            },
+            onDismiss = { showNotificationExplainer = false },
+            destructive = false,
+        )
+    }
+
+    if (showNotificationDisableConfirm) {
+        TintoConfirmDialog(
+            title = stringResource(R.string.capture_notification_disable_title),
+            message = stringResource(R.string.capture_disable_message),
+            confirmLabel = stringResource(R.string.capture_disable_confirm),
+            onConfirm = {
+                showNotificationDisableConfirm = false
+                viewModel.onNotificationCaptureDisabled()
+            },
+            onDismiss = { showNotificationDisableConfirm = false },
+        )
+    }
+
     state.cardForm?.let { form ->
         CardFormSheet(
             form = form,
@@ -138,6 +203,7 @@ private fun ProfileContent(
     onAddCardClick: () -> Unit,
     onCardClick: (Card) -> Unit,
     onSmsCaptureClick: () -> Unit,
+    onNotificationCaptureClick: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
     val type = LocalTintoTypography.current
@@ -332,15 +398,29 @@ private fun ProfileContent(
             color = MaterialTheme.colorScheme.onBackground,
         )
         Spacer(Modifier.height(4.dp))
-        // SMS capture is live (Sprint 3); notifications and Gmail stay
-        // scaffolded seams for the coming sprints.
-        PermissionRow(Icons.Outlined.NotificationsNone, stringResource(R.string.profile_perm_notifications))
+        // SMS (Sprint 3) and Nu notifications (Sprint 4) are live; Gmail
+        // stays a scaffolded seam for the sprint's phase 2.
+        PermissionRow(
+            icon = Icons.Outlined.NotificationsNone,
+            label = stringResource(R.string.profile_perm_notifications),
+            statusLabel = stringResource(
+                when {
+                    state.notificationCaptureEnabled && state.notificationAccessGranted ->
+                        R.string.capture_state_on
+
+                    state.notificationCaptureEnabled -> R.string.capture_state_no_access
+                    else -> R.string.capture_state_off
+                },
+            ),
+            statusEmphasis = state.notificationCaptureEnabled && state.notificationAccessGranted,
+            onClick = onNotificationCaptureClick,
+        )
         HorizontalDivider(thickness = 0.5.dp, color = MaterialTheme.colorScheme.outline)
         PermissionRow(
             icon = Icons.Outlined.Sms,
             label = stringResource(R.string.profile_perm_sms),
             statusLabel = stringResource(
-                if (state.smsCaptureEnabled) R.string.capture_sms_state_on else R.string.capture_sms_state_off,
+                if (state.smsCaptureEnabled) R.string.capture_state_on else R.string.capture_state_off,
             ),
             statusEmphasis = state.smsCaptureEnabled,
             onClick = onSmsCaptureClick,

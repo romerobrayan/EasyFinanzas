@@ -21,5 +21,9 @@ data class ProfileUiState(
     val isDemo: Boolean = false,
     /** Whether the user opted in to SMS capture (Sprint 3). */
     val smsCaptureEnabled: Boolean = false,
+    /** Whether the user opted in to Nu notification capture (Sprint 4). */
+    val notificationCaptureEnabled: Boolean = false,
+    /** Whether system-level notification access is currently granted. */
+    val notificationAccessGranted: Boolean = false,
     val cardForm: CardFormUiState? = null,
 )
