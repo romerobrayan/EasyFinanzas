@@ -6,8 +6,10 @@ import androidx.lifecycle.viewModelScope
 import androidx.navigation.toRoute
 import dagger.hilt.android.lifecycle.HiltViewModel
 import dev.romerobrayan.tinto.core.common.TintoAnalytics
+import dev.romerobrayan.tinto.core.domain.model.Category
 import dev.romerobrayan.tinto.core.domain.model.Money
 import dev.romerobrayan.tinto.core.domain.model.PaymentMethod
+import dev.romerobrayan.tinto.core.domain.model.toCategoryScope
 import dev.romerobrayan.tinto.core.domain.model.PendingTransaction
 import dev.romerobrayan.tinto.core.domain.model.Transaction
 import dev.romerobrayan.tinto.core.domain.model.TransactionSource
@@ -63,6 +65,11 @@ class AddTransactionViewModel @Inject constructor(
     /** The pending capture being confirmed, once loaded. */
     private var originalPending: PendingTransaction? = null
 
+    /** Latest full (unscoped) category list, cached so type changes can
+     *  re-validate the selected category against the new scope. */
+    @Volatile
+    private var allCategories: List<Category> = emptyList()
+
     private data class Form(
         val amountDigits: String = "",
         val type: TransactionType = TransactionType.EXPENSE,
@@ -92,8 +99,13 @@ class AddTransactionViewModel @Inject constructor(
         categoryRepository.observeCategories(),
         cardRepository.observeCards(),
     ) { currentForm, categories, cards ->
+        allCategories = categories
         val today = Clock.System.todayIn(timeZone)
         val date = currentForm.date ?: today
+        // Only the categories that match the selected movement type: expenses
+        // and incomes draw from disjoint sets.
+        val scope = currentForm.type.toCategoryScope()
+        val scopedCategories = categories.filter { it.scope == scope }
         AddTransactionUiState(
             isEditing = editingId != null,
             isConfirmingCapture = pendingId != null,
@@ -105,7 +117,7 @@ class AddTransactionViewModel @Inject constructor(
             date = date,
             isDateToday = date == today,
             merchant = currentForm.merchant,
-            categories = categories,
+            categories = scopedCategories,
             cards = cards,
             errors = if (currentForm.submitAttempted) validate(currentForm) else emptySet(),
         )
@@ -117,7 +129,18 @@ class AddTransactionViewModel @Inject constructor(
         }
     }
 
-    fun onTypeChanged(type: TransactionType) = form.update { it.copy(type = type) }
+    fun onTypeChanged(type: TransactionType) = form.update { current ->
+        // Reset the category if the previously chosen one belongs to the other
+        // scope (expense vs income), so the form never keeps an off-scope pick.
+        val targetScope = type.toCategoryScope()
+        val categoryStillValid = current.categoryId?.let { id ->
+            allCategories.firstOrNull { it.id == id }?.scope == targetScope
+        } ?: false
+        current.copy(
+            type = type,
+            categoryId = if (categoryStillValid) current.categoryId else null,
+        )
+    }
 
     fun onMethodChanged(method: PaymentMethod) = form.update { it.copy(method = method) }
 

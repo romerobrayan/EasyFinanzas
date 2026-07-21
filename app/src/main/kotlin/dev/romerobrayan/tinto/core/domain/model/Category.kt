@@ -6,4 +6,6 @@ data class Category(
     val iconKey: String,
     val colorHex: String,
     val isSystem: Boolean,
+    /** Expense vs income category set; defaults to expense for legacy callers. */
+    val scope: CategoryScope = CategoryScope.EXPENSE,
 )

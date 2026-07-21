@@ -3,6 +3,7 @@ package dev.romerobrayan.tinto.core.data.firebase
 import com.google.firebase.firestore.DocumentSnapshot
 import dev.romerobrayan.tinto.core.domain.model.Card
 import dev.romerobrayan.tinto.core.domain.model.Category
+import dev.romerobrayan.tinto.core.domain.model.CategoryScope
 import dev.romerobrayan.tinto.core.domain.model.Money
 import dev.romerobrayan.tinto.core.domain.model.PaymentMethod
 import dev.romerobrayan.tinto.core.domain.model.Recurrence
@@ -59,6 +60,7 @@ internal fun Category.toFirestoreMap(): Map<String, Any?> = mapOf(
     "iconKey" to iconKey,
     "colorHex" to colorHex,
     "isSystem" to isSystem,
+    "scope" to scope.name,
 )
 
 internal fun DocumentSnapshot.toCategory(): Category? = runCatching {
@@ -68,6 +70,9 @@ internal fun DocumentSnapshot.toCategory(): Category? = runCatching {
         iconKey = getString("iconKey") ?: "dots",
         colorHex = getString("colorHex") ?: "#B99CA6",
         isSystem = getBoolean("isSystem") ?: false,
+        // Additive field: rows written before Sprint 5 have no "scope" → expense.
+        scope = getString("scope")?.let { runCatching { CategoryScope.valueOf(it) }.getOrNull() }
+            ?: CategoryScope.EXPENSE,
     )
 }.getOrNull()
 

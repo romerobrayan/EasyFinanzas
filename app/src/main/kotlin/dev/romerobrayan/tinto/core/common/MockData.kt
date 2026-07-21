@@ -2,6 +2,7 @@ package dev.romerobrayan.tinto.core.common
 
 import dev.romerobrayan.tinto.core.domain.model.Card
 import dev.romerobrayan.tinto.core.domain.model.Category
+import dev.romerobrayan.tinto.core.domain.model.CategoryScope
 import dev.romerobrayan.tinto.core.domain.model.Money
 import dev.romerobrayan.tinto.core.domain.model.PaymentMethod
 import dev.romerobrayan.tinto.core.domain.model.Recurrence
@@ -33,14 +34,23 @@ object MockData {
     const val USER_EMAIL = "brayan@tinto.app"
 
     val categories: List<Category> = listOf(
-        Category("cat-comida", "Comida", "tools-kitchen-2", "#E08AA3", isSystem = true),
-        Category("cat-entretenimiento", "Entretenimiento", "device-tv", "#C9A961", isSystem = true),
-        Category("cat-hormiga", "Gasto hormiga", "ant", "#D8567A", isSystem = true),
-        Category("cat-salud", "Salud", "heartbeat", "#5FB894", isSystem = true),
-        Category("cat-transporte", "Pasajes / Transporte", "bus", "#7F9BD1", isSystem = true),
-        Category("cat-servicios", "Servicios / Suscripciones", "repeat", "#C79A6B", isSystem = true),
-        Category("cat-mercado", "Mercado", "shopping-cart", "#9DC97E", isSystem = true),
-        Category("cat-otros", "Otros", "dots", "#B99CA6", isSystem = true),
+        // Gasto (EXPENSE) — el set original + Hogar/Emergencias (Sprint 5).
+        Category("cat-comida", "Comida", "tools-kitchen-2", "#E08AA3", isSystem = true, scope = CategoryScope.EXPENSE),
+        Category("cat-entretenimiento", "Entretenimiento", "device-tv", "#C9A961", isSystem = true, scope = CategoryScope.EXPENSE),
+        Category("cat-hormiga", "Gasto hormiga", "ant", "#D8567A", isSystem = true, scope = CategoryScope.EXPENSE),
+        Category("cat-salud", "Salud", "heartbeat", "#5FB894", isSystem = true, scope = CategoryScope.EXPENSE),
+        Category("cat-transporte", "Pasajes / Transporte", "bus", "#7F9BD1", isSystem = true, scope = CategoryScope.EXPENSE),
+        Category("cat-servicios", "Servicios / Suscripciones", "repeat", "#C79A6B", isSystem = true, scope = CategoryScope.EXPENSE),
+        Category("cat-mercado", "Mercado", "shopping-cart", "#9DC97E", isSystem = true, scope = CategoryScope.EXPENSE),
+        Category("cat-hogar", "Hogar", "home", "#B58AC9", isSystem = true, scope = CategoryScope.EXPENSE),
+        Category("cat-emergencias", "Emergencias", "alert", "#E0A05A", isSystem = true, scope = CategoryScope.EXPENSE),
+        Category("cat-otros", "Otros", "dots", "#B99CA6", isSystem = true, scope = CategoryScope.EXPENSE),
+        // Ingreso (INCOME) — set propio (Sprint 5); acentos on-brand distintos entre sí.
+        Category("cat-nomina", "Nómina", "payroll", "#67C0A8", isSystem = true, scope = CategoryScope.INCOME),
+        Category("cat-pago-deuda", "Pago deuda", "debt", "#D68FA8", isSystem = true, scope = CategoryScope.INCOME),
+        Category("cat-prestamo", "Préstamo", "loan", "#C9A0D6", isSystem = true, scope = CategoryScope.INCOME),
+        Category("cat-movimiento", "Movimiento", "transfer", "#7FB0D6", isSystem = true, scope = CategoryScope.INCOME),
+        Category("cat-aportes", "Aportes", "contribution", "#B6C97E", isSystem = true, scope = CategoryScope.INCOME),
     )
 
     val cards: List<Card> = listOf(
