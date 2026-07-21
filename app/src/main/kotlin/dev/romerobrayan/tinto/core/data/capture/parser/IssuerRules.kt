@@ -14,10 +14,10 @@ import dev.romerobrayan.tinto.core.domain.model.TransactionType
 object IssuerRules {
 
     /**
-     * The Nu app's package name — the notification-channel equivalent of an
-     * SMS shortcode. Single point of change for the allowlist.
+     * The Nu app's package name (confirmed on the real device) — the
+     * notification-channel equivalent of an SMS shortcode. Single point of
+     * change for the allowlist.
      */
-    // TODO: confirmar package real de Nu en el dispositivo (valor provisional).
     const val NU_PACKAGE_NAME: String = "com.nu.production"
 
     private const val AMOUNT = """\$(?<amount>[\d.,]+)"""
