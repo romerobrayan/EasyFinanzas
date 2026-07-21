@@ -119,6 +119,7 @@ private class NoOpAnalytics : TintoAnalytics {
     override fun logDeleteCard() = Unit
     override fun logAddReminder(recurrence: String) = Unit
     override fun logReminderPaid(recurrence: String) = Unit
+    override fun logRecurringRuleCreated(frequency: String) = Unit
     override fun logReminderNotificationShown(recurrence: String) = Unit
     override fun logCapturePermissionGranted(channel: String) = Unit
     override fun logCaptureDetected(channel: String, issuer: String) = Unit
