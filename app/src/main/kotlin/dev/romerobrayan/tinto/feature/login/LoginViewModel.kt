@@ -12,6 +12,7 @@ import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 
 @HiltViewModel
@@ -35,7 +36,8 @@ class LoginViewModel @Inject constructor(
                 authRepository.signInWithGoogle(idToken)
                 analytics.logLogin("google")
                 // The session flow flips to SignedIn and TintoRoot swaps
-                // screens; the spinner stays on until this screen leaves.
+                // screens; the spinner stays on until this screen leaves,
+                // and onScreenLeft clears it for the next visit.
             } catch (cancellation: CancellationException) {
                 throw cancellation
             } catch (error: Exception) {
@@ -47,6 +49,18 @@ class LoginViewModel @Inject constructor(
 
     fun onSignInCancelled() {
         _uiState.value = LoginUiState()
+    }
+
+    /**
+     * The login screen left the composition (sign-in landed, demo entered, or
+     * the activity is being torn down). This view model outlives the screen —
+     * TintoRoot swaps composables under one activity, so the same instance is
+     * reused when the user signs out and comes back — and a retained
+     * `isSigningIn = true` would leave the Google button spinning forever.
+     * The error is kept so it survives configuration changes.
+     */
+    fun onScreenLeft() {
+        _uiState.update { it.copy(isSigningIn = false) }
     }
 
     fun onSignInFailed(@StringRes messageRes: Int) {

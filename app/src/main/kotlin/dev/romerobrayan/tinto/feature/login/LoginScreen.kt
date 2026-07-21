@@ -15,6 +15,7 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
@@ -51,6 +52,12 @@ fun LoginScreen(
     // Read at composition time (Compose lint: resource queries through
     // LocalContext.current don't refresh on configuration changes).
     val webClientId = stringResource(R.string.default_web_client_id)
+
+    // The view model is activity-scoped and outlives this screen; clear the
+    // in-flight sign-in state so the next visit doesn't start on the spinner.
+    DisposableEffect(viewModel) {
+        onDispose { viewModel.onScreenLeft() }
+    }
 
     LoginContent(
         state = state,
