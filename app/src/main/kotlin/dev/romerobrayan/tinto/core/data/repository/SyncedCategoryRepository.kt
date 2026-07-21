@@ -36,6 +36,7 @@ class SyncedCategoryRepository @Inject constructor(
 ) : CategoryRepository {
 
     private val seededUids = ConcurrentHashMap.newKeySet<String>()
+    private val backfilledUids = ConcurrentHashMap.newKeySet<String>()
 
     override fun observeCategories(): Flow<List<Category>> =
         auth.session.flatMapLatest { session ->
@@ -50,13 +51,40 @@ class SyncedCategoryRepository @Inject constructor(
         userCollection(uid, "categories")
             .listenAsList(analytics)
             .map { docs -> docs.mapNotNull { it.toCategory() } }
-            .onEach { categories -> if (categories.isEmpty()) seedSystemCategories(uid) }
+            .onEach { categories ->
+                if (categories.isEmpty()) {
+                    seedSystemCategories(uid)
+                } else {
+                    backfillSystemCategories(uid, categories)
+                }
+            }
             .map { categories -> categories.ifEmpty { MockData.categories } }
 
     private fun seedSystemCategories(uid: String) {
         if (!seededUids.add(uid)) return
         val batch = Firebase.firestore.batch()
         MockData.categories.forEach { category ->
+            batch.set(userCollection(uid, "categories").document(category.id), category.toFirestoreMap())
+        }
+        batch.commit()
+    }
+
+    /**
+     * Idempotent reconciliation for accounts seeded before Sprint 5: the seed
+     * only runs on an empty collection, so existing accounts never receive the
+     * categories added later (Hogar/Emergencias + the income set). Upsert the
+     * missing system categories by their fixed id — user-created categories
+     * (different ids) are left untouched, and once written they stop being
+     * "missing", so this converges after one write and is safe to run every
+     * launch. Guarded per-uid so a burst of emissions writes at most once.
+     */
+    private fun backfillSystemCategories(uid: String, existing: List<Category>) {
+        if (!backfilledUids.add(uid)) return
+        val existingIds = existing.mapTo(mutableSetOf()) { it.id }
+        val missing = MockData.categories.filter { it.isSystem && it.id !in existingIds }
+        if (missing.isEmpty()) return
+        val batch = Firebase.firestore.batch()
+        missing.forEach { category ->
             batch.set(userCollection(uid, "categories").document(category.id), category.toFirestoreMap())
         }
         batch.commit()

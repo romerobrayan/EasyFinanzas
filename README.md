@@ -11,7 +11,7 @@ notifications and Gmail.
 UI language is Spanish (es-CO); amounts are Colombian pesos handled as
 integer minor units end to end.
 
-## Status — Sprint 1: UI shell ✅ · Sprint 1.5: Firebase ✅ · Sprint 2: CRUD ✅ · Sprint 3: SMS capture ✅ · Reminder notifications ✅ · Sprint 4 phase 1: Nu notification capture ✅ (Gmail pending)
+## Status — Sprint 1: UI shell ✅ · Sprint 1.5: Firebase ✅ · Sprint 2: CRUD ✅ · Sprint 3: SMS capture ✅ · Reminder notifications ✅ · Sprint 4 phase 1: Nu notification capture ✅ (Gmail pending) · Sprint 5: categorías + automatización ✅
 
 The complete visual shell plus the Firebase backbone: Google sign-in
 (Credential Manager), per-user Cloud Firestore persistence with offline
@@ -44,6 +44,22 @@ as SMS, with relative dates falling back to the notification's post time
 and payment *requests* dropped as noise. No history backfill exists for
 notifications: capture starts from the moment access is granted. Phase 2
 (Gmail transactional email) is still pending.
+
+Sprint 5 splits categories by direction and adds automation. Expenses gain
+**Hogar** and **Emergencias**; incomes get their own set — Nómina, Pago
+deuda, Préstamo, Movimiento, Aportes — with the add/edit form showing only
+the categories that match the selected type (existing accounts pick up the
+new system categories through an idempotent backfill). Income mode also gets
+its own fields: method is Efectivo / Transferencia / a registered card
+(chosen by tap, no 4-digit prompt). And any movement can be **automated** —
+a switch reveals a frequency (Diario / Semanal / **Quincenal** / Mensual)
+and the app materializes the recurring movements straight into the list,
+marked *recurrente*. "Quincenal" is Colombian payroll cadence: the 15th and
+the last day of each month. A catch-up generator with deterministic ids
+fills in anything missed since the app last ran without ever duplicating,
+and a "Movimientos automáticos" manager in Perfil lists the rules with
+pause/resume and delete. Income by Nu notification is deferred to Sprint 6;
+in this sprint incomes arrive from the manual form and Bancolombia SMS.
 
 ## Stack
 

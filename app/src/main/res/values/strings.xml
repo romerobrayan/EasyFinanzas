@@ -36,6 +36,7 @@
     <string name="filter_all">Todos</string>
     <string name="movements_empty">Sin movimientos para este filtro</string>
     <string name="method_cash">Efectivo</string>
+    <string name="method_transfer">Transferencia</string>
     <string name="card_mask">•••• %1$s</string>
 
     <!-- Add transaction -->
@@ -45,6 +46,7 @@
     <string name="add_method_label">Método de pago</string>
     <string name="add_method_card">Tarjeta</string>
     <string name="add_method_cash">Efectivo</string>
+    <string name="add_method_transfer">Transferencia</string>
     <string name="add_amount_placeholder">$0</string>
     <string name="add_last4_label">Últimos 4 dígitos de la tarjeta</string>
     <string name="add_category_label">Categoría</string>
@@ -52,6 +54,14 @@
     <string name="add_merchant_label">Descripción (opcional)</string>
     <string name="add_save_expense">Agregar gasto</string>
     <string name="add_save_income">Agregar ingreso</string>
+    <!-- Automatización (Sprint 5) -->
+    <string name="add_automate_label">Automatizar este movimiento</string>
+    <string name="add_automate_hint">Se repetirá solo según la frecuencia elegida</string>
+    <string name="add_automate_frequency_label">Frecuencia</string>
+    <string name="frequency_daily">Diario</string>
+    <string name="frequency_weekly">Semanal</string>
+    <string name="frequency_semimonthly">Quincenal</string>
+    <string name="frequency_monthly">Mensual</string>
     <string name="add_error_amount">Ingresa un monto mayor a cero</string>
     <string name="add_error_category">Selecciona una categoría</string>
     <string name="add_error_last4">Ingresa los 4 dígitos de la tarjeta</string>
@@ -75,6 +85,7 @@
     <string name="source_notification">Notificación</string>
     <string name="source_email">Correo</string>
     <string name="source_sms">SMS</string>
+    <string name="source_recurring">Automático</string>
 
     <!-- Reminders -->
     <string name="reminders_title">Recordatorios</string>
@@ -127,6 +138,9 @@
     <string name="card_form_error_last4">Ingresa los 4 dígitos de la tarjeta</string>
     <string name="card_delete_confirm_title">¿Eliminar tarjeta?</string>
     <string name="card_delete_confirm_message">Tus movimientos no se modifican; los que usaban esta tarjeta quedan sin asociar.</string>
+    <string name="profile_automation_section">Automatización</string>
+    <string name="profile_recurring">Movimientos automáticos</string>
+    <string name="profile_recurring_hint">Gestiona los movimientos que se repiten solos</string>
     <string name="profile_data_section">Datos</string>
     <string name="profile_export">Exportar datos</string>
     <string name="profile_export_hint">Exporta tus movimientos en JSON versionado</string>
@@ -198,6 +212,13 @@
     <string name="profile_sign_out_hint">Tus movimientos quedan guardados en tu cuenta</string>
     <string name="profile_exit_demo">Salir de la demo</string>
     <string name="profile_demo_badge">Modo demo</string>
+
+    <!-- Movimientos automáticos (Sprint 5) -->
+    <string name="recurring_rules_title">Movimientos automáticos</string>
+    <string name="recurring_rules_empty">Aún no tienes movimientos automáticos. Activa "Automatizar este movimiento" al agregar uno.</string>
+    <string name="recurring_row_subtitle">%1$s · Próximo: %2$s</string>
+    <string name="recurring_delete_confirm_title">¿Eliminar automatización?</string>
+    <string name="recurring_delete_confirm_message">Se dejarán de generar movimientos nuevos. Los ya creados no se borran.</string>
 
     <!-- Shared -->
     <string name="recurring_badge">recurrente</string>

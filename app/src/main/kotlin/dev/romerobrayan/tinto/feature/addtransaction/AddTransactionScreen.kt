@@ -29,6 +29,8 @@ import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Switch
+import androidx.compose.material3.SwitchDefaults
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.TextField
@@ -61,13 +63,16 @@ import dev.romerobrayan.tinto.core.designsystem.component.CategoryIcon
 import dev.romerobrayan.tinto.core.designsystem.component.TintoConfirmDialog
 import dev.romerobrayan.tinto.core.designsystem.component.TintoDatePickerDialog
 import dev.romerobrayan.tinto.core.designsystem.component.TintoSelectorPill
+import dev.romerobrayan.tinto.core.designsystem.component.frequencyLabelRes
 import dev.romerobrayan.tinto.core.designsystem.component.tintoTextFieldColors
 import dev.romerobrayan.tinto.core.designsystem.theme.ButtonShape
 import dev.romerobrayan.tinto.core.designsystem.theme.LocalTintoColors
 import dev.romerobrayan.tinto.core.designsystem.theme.LocalTintoTypography
 import dev.romerobrayan.tinto.core.designsystem.theme.PillShape
+import dev.romerobrayan.tinto.core.domain.model.Card
 import dev.romerobrayan.tinto.core.domain.model.Money
 import dev.romerobrayan.tinto.core.domain.model.PaymentMethod
+import dev.romerobrayan.tinto.core.domain.model.TransactionFrequency
 import dev.romerobrayan.tinto.core.domain.model.TransactionType
 import kotlinx.datetime.LocalDate
 
@@ -90,9 +95,12 @@ fun AddTransactionScreen(
         onTypeChanged = viewModel::onTypeChanged,
         onMethodChanged = viewModel::onMethodChanged,
         onLast4Changed = viewModel::onLast4Changed,
+        onCardSelected = viewModel::onCardSelected,
         onCategorySelected = viewModel::onCategorySelected,
         onDateChanged = viewModel::onDateChanged,
         onMerchantChanged = viewModel::onMerchantChanged,
+        onAutomateToggled = viewModel::onAutomateToggled,
+        onFrequencyChanged = viewModel::onFrequencyChanged,
         onSubmit = viewModel::onSubmit,
         onDiscardPending = viewModel::onDiscardPending,
         modifier = modifier,
@@ -108,9 +116,12 @@ private fun AddTransactionContent(
     onTypeChanged: (TransactionType) -> Unit,
     onMethodChanged: (PaymentMethod) -> Unit,
     onLast4Changed: (String) -> Unit,
+    onCardSelected: (Card) -> Unit,
     onCategorySelected: (String) -> Unit,
     onDateChanged: (LocalDate) -> Unit,
     onMerchantChanged: (String) -> Unit,
+    onAutomateToggled: (Boolean) -> Unit,
+    onFrequencyChanged: (TransactionFrequency) -> Unit,
     onSubmit: () -> Unit,
     onDiscardPending: () -> Unit,
     modifier: Modifier = Modifier,
@@ -181,44 +192,71 @@ private fun AddTransactionContent(
             color = MaterialTheme.colorScheme.onBackground,
         )
         Spacer(Modifier.height(8.dp))
-        Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
-            TintoSelectorPill(
-                label = stringResource(R.string.add_method_cash),
-                selected = state.method == PaymentMethod.CASH,
-                onClick = { onMethodChanged(PaymentMethod.CASH) },
-            )
-            TintoSelectorPill(
-                label = stringResource(R.string.add_method_card),
-                selected = state.method == PaymentMethod.CARD,
-                onClick = { onMethodChanged(PaymentMethod.CARD) },
-            )
-        }
-
-        if (state.method == PaymentMethod.CARD) {
-            Spacer(Modifier.height(12.dp))
-            Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+        if (state.type == TransactionType.INCOME) {
+            // Ingreso: Efectivo / Transferencia / cada tarjeta registrada. Se
+            // elige la tarjeta (sin pedir los 4 dígitos) — no hay campo manual.
+            FlowRow(
+                horizontalArrangement = Arrangement.spacedBy(6.dp),
+                verticalArrangement = Arrangement.spacedBy(8.dp),
+            ) {
+                TintoSelectorPill(
+                    label = stringResource(R.string.add_method_cash),
+                    selected = state.method == PaymentMethod.CASH,
+                    onClick = { onMethodChanged(PaymentMethod.CASH) },
+                )
+                TintoSelectorPill(
+                    label = stringResource(R.string.add_method_transfer),
+                    selected = state.method == PaymentMethod.TRANSFER,
+                    onClick = { onMethodChanged(PaymentMethod.TRANSFER) },
+                )
                 state.cards.forEach { card ->
                     TintoSelectorPill(
                         label = "${card.bank} ${stringResource(R.string.card_mask, card.last4)}",
-                        selected = state.last4 == card.last4,
-                        onClick = { onLast4Changed(card.last4) },
+                        selected = state.method == PaymentMethod.CARD && state.last4 == card.last4,
+                        onClick = { onCardSelected(card) },
                     )
                 }
             }
-            Spacer(Modifier.height(12.dp))
-            TextField(
-                value = state.last4,
-                onValueChange = onLast4Changed,
-                label = { Text(stringResource(R.string.add_last4_label)) },
-                singleLine = true,
-                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
-                colors = tintoTextFieldColors(),
-                shape = ButtonShape,
-                modifier = Modifier.fillMaxWidth(),
-            )
-            if (AddTransactionValidator.Error.LAST4_INVALID in state.errors) {
-                Spacer(Modifier.height(4.dp))
-                ErrorText(stringResource(R.string.add_error_last4))
+        } else {
+            Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+                TintoSelectorPill(
+                    label = stringResource(R.string.add_method_cash),
+                    selected = state.method == PaymentMethod.CASH,
+                    onClick = { onMethodChanged(PaymentMethod.CASH) },
+                )
+                TintoSelectorPill(
+                    label = stringResource(R.string.add_method_card),
+                    selected = state.method == PaymentMethod.CARD,
+                    onClick = { onMethodChanged(PaymentMethod.CARD) },
+                )
+            }
+
+            if (state.method == PaymentMethod.CARD) {
+                Spacer(Modifier.height(12.dp))
+                Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                    state.cards.forEach { card ->
+                        TintoSelectorPill(
+                            label = "${card.bank} ${stringResource(R.string.card_mask, card.last4)}",
+                            selected = state.last4 == card.last4,
+                            onClick = { onLast4Changed(card.last4) },
+                        )
+                    }
+                }
+                Spacer(Modifier.height(12.dp))
+                TextField(
+                    value = state.last4,
+                    onValueChange = onLast4Changed,
+                    label = { Text(stringResource(R.string.add_last4_label)) },
+                    singleLine = true,
+                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+                    colors = tintoTextFieldColors(),
+                    shape = ButtonShape,
+                    modifier = Modifier.fillMaxWidth(),
+                )
+                if (AddTransactionValidator.Error.LAST4_INVALID in state.errors) {
+                    Spacer(Modifier.height(4.dp))
+                    ErrorText(stringResource(R.string.add_error_last4))
+                }
             }
         }
 
@@ -291,6 +329,55 @@ private fun AddTransactionContent(
             shape = ButtonShape,
             modifier = Modifier.fillMaxWidth(),
         )
+
+        Spacer(Modifier.height(24.dp))
+        Row(verticalAlignment = Alignment.CenterVertically) {
+            Column(Modifier.weight(1f)) {
+                Text(
+                    text = stringResource(R.string.add_automate_label),
+                    style = type.sectionTitle,
+                    color = MaterialTheme.colorScheme.onBackground,
+                )
+                Spacer(Modifier.height(2.dp))
+                Text(
+                    text = stringResource(R.string.add_automate_hint),
+                    style = type.caption,
+                    color = tinto.muted,
+                )
+            }
+            Spacer(Modifier.width(12.dp))
+            Switch(
+                checked = state.automate,
+                onCheckedChange = onAutomateToggled,
+                colors = SwitchDefaults.colors(
+                    checkedThumbColor = MaterialTheme.colorScheme.onPrimary,
+                    checkedTrackColor = MaterialTheme.colorScheme.primary,
+                    uncheckedThumbColor = tinto.muted,
+                    uncheckedTrackColor = MaterialTheme.colorScheme.surfaceVariant,
+                ),
+            )
+        }
+        if (state.automate) {
+            Spacer(Modifier.height(12.dp))
+            Text(
+                text = stringResource(R.string.add_automate_frequency_label),
+                style = type.caption,
+                color = tinto.muted,
+            )
+            Spacer(Modifier.height(8.dp))
+            FlowRow(
+                horizontalArrangement = Arrangement.spacedBy(6.dp),
+                verticalArrangement = Arrangement.spacedBy(8.dp),
+            ) {
+                TransactionFrequency.entries.forEach { frequency ->
+                    TintoSelectorPill(
+                        label = stringResource(frequencyLabelRes(frequency)),
+                        selected = state.frequency == frequency,
+                        onClick = { onFrequencyChanged(frequency) },
+                    )
+                }
+            }
+        }
 
         Spacer(Modifier.height(28.dp))
         Button(

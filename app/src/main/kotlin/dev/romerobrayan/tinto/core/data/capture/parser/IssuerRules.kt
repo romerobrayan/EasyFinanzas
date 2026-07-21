@@ -149,6 +149,9 @@ object IssuerRules {
                 ),
                 type = TransactionType.EXPENSE,
             ),
+            // TODO(sprint-6): plantillas INCOME para Nu (recibiste/consignación)
+            //  — requiere texto real de la notificación. Aplazado en Sprint 5:
+            //  los ingresos solo llegan por formulario manual y SMS Bancolombia.
         ),
         dropPatterns = listOf(
             // A payment *request* / pre-auth, not a completed movement (the
