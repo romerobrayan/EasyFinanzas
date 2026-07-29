@@ -56,7 +56,7 @@
 
     <!-- Model download -->
     <string name="stt_model_title">Descarga única</string>
-    <string name="stt_model_body">La transcripción funciona sin internet, pero primero hay que descargar el modelo de voz (%1$s MB). Solo se hace una vez.</string>
+    <string name="stt_model_body">La transcripción funciona sin internet, pero primero hay que descargar el modelo de voz (%1$d MB). Solo se hace una vez.</string>
     <string name="stt_model_download">Descargar modelo</string>
     <string name="stt_model_downloading">Descargando modelo… %1$d %%</string>
     <string name="stt_model_verifying">Verificando la descarga…</string>

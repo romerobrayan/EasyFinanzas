@@ -19,7 +19,7 @@ import kotlinx.coroutines.ensureActive
  * at 16 kHz is 240 000 samples — under a megabyte as floats. Nothing to clean
  * up, nothing to leak, no file lifecycle to get wrong with someone's voice in it.
  */
-internal class AudioRecorder @Inject constructor() {
+class AudioRecorder @Inject constructor() {
 
     /**
      * Records until [shouldStop] returns true or [maxMillis] elapses, then

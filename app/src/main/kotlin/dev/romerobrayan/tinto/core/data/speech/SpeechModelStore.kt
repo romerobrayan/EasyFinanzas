@@ -179,7 +179,7 @@ class SpeechModelStore @Inject constructor(
         }
 
         state.value = SpeechModelState.Verifying
-        val actual = digest.digest().toHexString()
+        val actual = digest.digest().toLowercaseHex()
         if (!actual.equals(model.sha256, ignoreCase = true)) {
             part.delete()
             state.value = SpeechModelState.Failed(ModelFailure.CHECKSUM_MISMATCH)
@@ -227,5 +227,5 @@ class SpeechModelStore @Inject constructor(
 }
 
 /** Lowercase hex, the form checksums are published in. */
-internal fun ByteArray.toHexString(): String =
+internal fun ByteArray.toLowercaseHex(): String =
     joinToString(separator = "") { byte -> "%02x".format(byte) }
