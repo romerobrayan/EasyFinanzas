@@ -11,6 +11,7 @@ import dev.romerobrayan.tinto.core.data.capture.parser.RuleBasedTransactionParse
 import dev.romerobrayan.tinto.core.data.repository.RoomPendingTransactionRepository
 import dev.romerobrayan.tinto.core.data.repository.SyncedCardRepository
 import dev.romerobrayan.tinto.core.data.repository.SyncedCategoryRepository
+import dev.romerobrayan.tinto.core.data.repository.SyncedRecurringRuleRepository
 import dev.romerobrayan.tinto.core.data.repository.SyncedReminderRepository
 import dev.romerobrayan.tinto.core.data.repository.SyncedTransactionRepository
 import dev.romerobrayan.tinto.core.data.speech.AndroidTtsSynthesizer
@@ -21,6 +22,7 @@ import dev.romerobrayan.tinto.core.domain.repository.CategoryRepository
 import dev.romerobrayan.tinto.core.domain.repository.MonthSummaryNarrator
 import dev.romerobrayan.tinto.core.domain.repository.PendingTransactionRepository
 import dev.romerobrayan.tinto.core.domain.repository.NotificationCapture
+import dev.romerobrayan.tinto.core.domain.repository.RecurringRuleRepository
 import dev.romerobrayan.tinto.core.domain.repository.ReminderRepository
 import dev.romerobrayan.tinto.core.domain.repository.SmsCapture
 import dev.romerobrayan.tinto.core.domain.repository.SpeechSynthesizer
@@ -51,6 +53,11 @@ abstract class RepositoryModule {
 
     @Binds
     abstract fun bindReminderRepository(impl: SyncedReminderRepository): ReminderRepository
+
+    @Binds
+    abstract fun bindRecurringRuleRepository(
+        impl: SyncedRecurringRuleRepository,
+    ): RecurringRuleRepository
 
     // Capture pipeline: the staging store is device-local (Room) on purpose —
     // no Synced*/InMemory* split, see PendingTransactionRepository docs.

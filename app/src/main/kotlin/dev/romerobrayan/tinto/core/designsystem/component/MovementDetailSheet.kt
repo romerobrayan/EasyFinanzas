@@ -92,6 +92,7 @@ fun MovementDetailSheet(
                 DetailValue(
                     when {
                         item.isCash -> stringResource(R.string.method_cash)
+                        item.isTransfer -> stringResource(R.string.method_transfer)
                         item.cardLast4 != null -> stringResource(R.string.card_mask, item.cardLast4)
                         else -> stringResource(R.string.add_method_card)
                     },
@@ -199,5 +200,6 @@ private fun sourceLabel(source: TransactionSource): String = stringResource(
         TransactionSource.NOTIFICATION -> R.string.source_notification
         TransactionSource.EMAIL -> R.string.source_email
         TransactionSource.SMS -> R.string.source_sms
+        TransactionSource.RECURRING -> R.string.source_recurring
     },
 )

@@ -40,6 +40,9 @@ interface TintoAnalytics {
     /** [recurrence] is the coarse enum name only — never titles or amounts. */
     fun logReminderPaid(recurrence: String)
 
+    /** [frequency] is the coarse enum name only — never amounts or merchants. */
+    fun logRecurringRuleCreated(frequency: String)
+
     /** [recurrence] only — a reminder notification fired on the device. */
     fun logReminderNotificationShown(recurrence: String)
 

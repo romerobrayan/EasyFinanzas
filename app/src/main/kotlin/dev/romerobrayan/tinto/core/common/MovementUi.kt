@@ -24,6 +24,8 @@ data class MovementUi(
     /** Last four digits of the matched registered card; null when unmatched. */
     val cardLast4: String?,
     val isCash: Boolean,
+    /** True for a bank transfer/deposit (income only); labels as "Transferencia". */
+    val isTransfer: Boolean = false,
     val amount: Money,
     val type: TransactionType,
     val isRecurring: Boolean,
@@ -48,10 +50,14 @@ fun Transaction.toMovementUi(
         categoryColorHex = category?.colorHex ?: "#B99CA6",
         cardLast4 = cardId?.let { cardsById[it]?.last4 },
         isCash = method == PaymentMethod.CASH,
+        isTransfer = method == PaymentMethod.TRANSFER,
         amount = amount,
         type = type,
-        // TODO(sprint-3): replace with real recurrence detection; mock-driven for now.
-        isRecurring = merchant != null && merchant in recurringMerchants,
+        // Automated movements always show the badge; the mock merchant list is
+        // the legacy heuristic for the rest.
+        // TODO(sprint-3): replace the merchant heuristic with real detection.
+        isRecurring = source == TransactionSource.RECURRING ||
+            (merchant != null && merchant in recurringMerchants),
         date = occurredAt.toLocalDateTime(timeZone).date,
         merchant = merchant,
         source = source,

@@ -72,5 +72,18 @@
                 <action android:name="android.intent.action.TIME_SET" />
             </intent-filter>
         </receiver>
+
+        <!-- Recurring movements (Sprint 5): re-run the catch-up generator after
+             reboot and on timezone/clock changes so pending automatic movements
+             materialize even without opening the app. -->
+        <receiver
+            android:name=".core.data.recurring.RecurringBootReceiver"
+            android:exported="true">
+            <intent-filter>
+                <action android:name="android.intent.action.BOOT_COMPLETED" />
+                <action android:name="android.intent.action.TIMEZONE_CHANGED" />
+                <action android:name="android.intent.action.TIME_SET" />
+            </intent-filter>
+        </receiver>
     </application>
 </manifest>
