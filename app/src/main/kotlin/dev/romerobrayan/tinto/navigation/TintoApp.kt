@@ -20,6 +20,10 @@ import dev.romerobrayan.tinto.feature.movements.MovementsScreen
 import dev.romerobrayan.tinto.feature.pending.PendingReviewScreen
 import dev.romerobrayan.tinto.feature.profile.ProfileScreen
 import dev.romerobrayan.tinto.feature.reminders.RemindersScreen
+import dev.romerobrayan.tinto.feature.voiceentry.VoiceEntryScreen
+
+/** Nav-result key for a dictated transcript handed back to the form. */
+private const val VOICE_TRANSCRIPT_KEY = "voice_transcript"
 
 /**
  * App frame: bottom bar + center FAB around the NavHost. The bar hides on
@@ -56,6 +60,7 @@ fun TintoApp(
         currentDestination.hasRoute<MovementsRoute>() -> "movements"
         currentDestination.hasRoute<AddTransactionRoute>() -> "add_transaction"
         currentDestination.hasRoute<PendingRoute>() -> "pending_review"
+        currentDestination.hasRoute<VoiceEntryRoute>() -> "voice_entry"
         currentDestination.hasRoute<RemindersRoute>() -> "reminders"
         currentDestination.hasRoute<ProfileRoute>() -> "profile"
         else -> null
@@ -88,8 +93,29 @@ fun TintoApp(
             composable<MovementsRoute> {
                 MovementsScreen(onEditMovement = onEditMovement)
             }
-            composable<AddTransactionRoute> {
-                AddTransactionScreen(onClose = { navController.popBackStack() })
+            composable<AddTransactionRoute> { entry ->
+                AddTransactionScreen(
+                    onClose = { navController.popBackStack() },
+                    onDictate = { navController.navigate(VoiceEntryRoute) },
+                    // The voice screen writes the transcript back here on its way
+                    // out; the form consumes it once so returning to this screen
+                    // later does not re-apply a stale dictation.
+                    dictatedText = entry.savedStateHandle.get<String>(VOICE_TRANSCRIPT_KEY),
+                    onDictatedTextConsumed = {
+                        entry.savedStateHandle.remove<String>(VOICE_TRANSCRIPT_KEY)
+                    },
+                )
+            }
+            composable<VoiceEntryRoute> {
+                VoiceEntryScreen(
+                    onClose = { navController.popBackStack() },
+                    onUseTranscript = { transcript ->
+                        navController.previousBackStackEntry
+                            ?.savedStateHandle
+                            ?.set(VOICE_TRANSCRIPT_KEY, transcript)
+                        navController.popBackStack()
+                    },
+                )
             }
             composable<PendingRoute> {
                 PendingReviewScreen(

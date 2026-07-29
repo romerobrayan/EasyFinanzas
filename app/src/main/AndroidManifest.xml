@@ -16,6 +16,16 @@
     <!-- Local reminder notifications: alert channel + reboot re-registration. -->
     <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
     <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED" />
+    <!-- Voice expense entry: on-device Whisper transcription. Audio is held in
+         memory for the length of one utterance, never written to disk and never
+         leaves the device. Asked for in context, the first time the user holds
+         the mic button. -->
+    <uses-permission android:name="android.permission.RECORD_AUDIO" />
+    <!-- Optional so the app stays installable on a device without a microphone;
+         voice entry simply reports the mic as unavailable there. -->
+    <uses-feature
+        android:name="android.hardware.microphone"
+        android:required="false" />
 
     <application
         android:name=".TintoApplication"

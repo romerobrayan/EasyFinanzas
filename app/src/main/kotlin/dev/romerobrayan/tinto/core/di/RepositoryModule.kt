@@ -15,6 +15,7 @@ import dev.romerobrayan.tinto.core.data.repository.SyncedReminderRepository
 import dev.romerobrayan.tinto.core.data.repository.SyncedTransactionRepository
 import dev.romerobrayan.tinto.core.data.speech.AndroidTtsSynthesizer
 import dev.romerobrayan.tinto.core.data.speech.ResourceMonthSummaryNarrator
+import dev.romerobrayan.tinto.core.data.speech.WhisperSpeechRecognizer
 import dev.romerobrayan.tinto.core.domain.repository.AuthRepository
 import dev.romerobrayan.tinto.core.domain.repository.CardRepository
 import dev.romerobrayan.tinto.core.domain.repository.CategoryRepository
@@ -23,6 +24,7 @@ import dev.romerobrayan.tinto.core.domain.repository.PendingTransactionRepositor
 import dev.romerobrayan.tinto.core.domain.repository.NotificationCapture
 import dev.romerobrayan.tinto.core.domain.repository.ReminderRepository
 import dev.romerobrayan.tinto.core.domain.repository.SmsCapture
+import dev.romerobrayan.tinto.core.domain.repository.SpeechRecognizer
 import dev.romerobrayan.tinto.core.domain.repository.SpeechSynthesizer
 import dev.romerobrayan.tinto.core.domain.repository.TransactionParser
 import dev.romerobrayan.tinto.core.domain.repository.TransactionRepository
@@ -75,4 +77,10 @@ abstract class RepositoryModule {
 
     @Binds
     abstract fun bindMonthSummaryNarrator(impl: ResourceMonthSummaryNarrator): MonthSummaryNarrator
+
+    // Speech-to-text: the platform android.speech.SpeechRecognizer is the
+    // documented fallback if on-device Whisper ever has to go — rebinding this
+    // one line is the whole migration. See docs/stt-whisper.md.
+    @Binds
+    abstract fun bindSpeechRecognizer(impl: WhisperSpeechRecognizer): SpeechRecognizer
 }

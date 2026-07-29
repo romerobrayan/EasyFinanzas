@@ -42,6 +42,48 @@
     <string name="cd_tts_play">Escuchar el resumen del mes</string>
     <string name="cd_tts_stop">Detener la lectura</string>
 
+    <!-- Voice entry (speech-to-text). Transcription only for now: the text is
+         handed back to the form as-is, the parser comes later. -->
+    <string name="stt_title">Dictar movimiento</string>
+    <string name="stt_hint">Mantén presionado y di algo como “gasté veinte mil pesos en almuerzo”.</string>
+    <string name="stt_hold_to_record">Mantén presionado para grabar</string>
+    <string name="stt_recording">Grabando… suelta para transcribir</string>
+    <string name="stt_transcribing">Transcribiendo…</string>
+    <string name="stt_result_label">Lo que escuchamos</string>
+    <string name="stt_use">Usar este texto</string>
+    <string name="stt_retry">Grabar de nuevo</string>
+    <string name="stt_timer">%1$d s</string>
+
+    <!-- Model download -->
+    <string name="stt_model_title">Descarga única</string>
+    <string name="stt_model_body">La transcripción funciona sin internet, pero primero hay que descargar el modelo de voz (%1$s MB). Solo se hace una vez.</string>
+    <string name="stt_model_download">Descargar modelo</string>
+    <string name="stt_model_downloading">Descargando modelo… %1$d %%</string>
+    <string name="stt_model_verifying">Verificando la descarga…</string>
+    <string name="stt_model_retry">Reintentar descarga</string>
+
+    <!-- Microphone permission -->
+    <string name="stt_permission_title">Necesitamos el micrófono</string>
+    <string name="stt_permission_body">Para dictar un movimiento necesitamos acceso al micrófono. El audio se procesa en tu teléfono y no se guarda ni se envía a ningún lado.</string>
+    <string name="stt_permission_grant">Permitir micrófono</string>
+    <string name="stt_permission_denied">Sin acceso al micrófono</string>
+    <string name="stt_permission_settings">Activa el micrófono desde los ajustes del sistema para dictar movimientos.</string>
+    <string name="stt_permission_open_settings">Abrir ajustes</string>
+
+    <!-- Failures -->
+    <string name="stt_error_model_unavailable">Falta descargar el modelo de voz</string>
+    <string name="stt_error_microphone_unavailable">No pudimos usar el micrófono</string>
+    <string name="stt_error_recording_failed">La grabación fue muy corta</string>
+    <string name="stt_error_transcription_failed">No pudimos transcribir el audio</string>
+    <string name="stt_error_no_speech">No escuchamos nada, intenta de nuevo</string>
+    <string name="stt_error_model_network">No pudimos descargar el modelo. Revisa tu conexión.</string>
+    <string name="stt_error_model_checksum">La descarga llegó dañada. Intenta de nuevo.</string>
+    <string name="stt_error_model_checksum_unknown">No podemos verificar el modelo, así que no lo usamos</string>
+    <string name="stt_error_model_storage">No hay espacio para el modelo de voz</string>
+
+    <string name="cd_stt_open">Dictar movimiento</string>
+    <string name="cd_stt_record">Mantener presionado para grabar</string>
+
     <!-- Month / statement sheet -->
     <string name="month_sheet_title">Selecciona un extracto</string>
     <string name="cd_month_selector">Seleccionar mes</string>
