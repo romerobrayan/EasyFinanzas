@@ -9,12 +9,14 @@ import dev.romerobrayan.tinto.core.domain.model.SpeechModel
 import dev.romerobrayan.tinto.core.domain.model.SpeechModelState
 import dev.romerobrayan.tinto.core.domain.repository.SpeechRecognizer
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.test.StandardTestDispatcher
+import kotlinx.coroutines.test.TestScope
 import kotlinx.coroutines.test.advanceUntilIdle
 import kotlinx.coroutines.test.resetMain
 import kotlinx.coroutines.test.runTest
@@ -35,6 +37,7 @@ import org.junit.Test
  * the button must commit the utterance rather than cancel it, and every failure
  * has to reach the user as its own message instead of a generic one.
  */
+@OptIn(ExperimentalCoroutinesApi::class)
 class VoiceEntryViewModelTest {
 
     private val dispatcher = StandardTestDispatcher()
@@ -262,9 +265,15 @@ class VoiceEntryViewModelTest {
         assertTrue(recognizer.released)
     }
 
-    private fun grantEverything() {
+    /**
+     * Must advance: the model state reaches the UI through a `viewModelScope`
+     * collector, which under `StandardTestDispatcher` has not run yet. Without
+     * this the preconditions look unmet and `onRecordStart` silently no-ops.
+     */
+    private fun TestScope.grantEverything() {
         viewModel.onPermissionResult(granted = true, canAskAgain = true)
         recognizer.modelStateFlow.value = SpeechModelState.Ready
+        advanceUntilIdle()
     }
 }
 
