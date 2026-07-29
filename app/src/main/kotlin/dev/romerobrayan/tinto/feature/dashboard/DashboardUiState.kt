@@ -1,5 +1,6 @@
 package dev.romerobrayan.tinto.feature.dashboard
 
+import androidx.annotation.StringRes
 import dev.romerobrayan.tinto.core.common.MovementUi
 import dev.romerobrayan.tinto.core.designsystem.component.ChartBarUi
 import dev.romerobrayan.tinto.core.designsystem.component.MonthOption
@@ -24,7 +25,26 @@ data class DashboardUiState(
     val heroDateLabel: String = "",
     val comparison: ComparisonUi? = null,
     val preview: List<MovementUi> = emptyList(),
+    /** Spoken-summary control state; see `docs/tts.md`. */
+    val speech: SpeechUiState = SpeechUiState.Idle,
 )
+
+/**
+ * The spoken-summary state machine. [Preparing] is explicit because the speech
+ * engine initializes asynchronously and can fail — the control must not pretend
+ * it is ready.
+ */
+sealed interface SpeechUiState {
+
+    data object Idle : SpeechUiState
+
+    /** Engine starting up and the utterance queued; no audio yet. */
+    data object Preparing : SpeechUiState
+
+    data object Speaking : SpeechUiState
+
+    data class Error(@StringRes val messageRes: Int) : SpeechUiState
+}
 
 /** Spend of the selected bucket vs the previous one (the "12% vs junio" chip). */
 data class ComparisonUi(

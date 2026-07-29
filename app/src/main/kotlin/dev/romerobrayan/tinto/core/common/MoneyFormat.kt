@@ -19,6 +19,15 @@ object MoneyFormat {
         return "$" + grouped
     }
 
+    /**
+     * Bare digits for text-to-speech: `1842500`, which a Spanish engine reads as
+     * "un millón ochocientos cuarenta y dos mil quinientos". [format]'s output is
+     * built for the eye — an engine reads its `$` and dot grouping as literal
+     * tokens or as decimals. The word "pesos" comes from the string resource.
+     */
+    fun spokenPesos(money: Money): String =
+        (money.abs().cents / CENTS_PER_PESO).toString()
+
     private const val CENTS_PER_PESO = 100L
     private const val GROUP_SIZE = 3
 }
