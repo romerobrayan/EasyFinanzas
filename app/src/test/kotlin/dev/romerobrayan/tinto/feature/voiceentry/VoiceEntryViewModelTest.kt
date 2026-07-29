@@ -287,7 +287,14 @@ private fun VoiceEntryViewModel.clearForTest() {
 private class FakeSpeechRecognizer : SpeechRecognizer {
 
     val modelStateFlow = MutableStateFlow<SpeechModelState>(SpeechModelState.NotDownloaded)
-    private var channel = Channel<RecognitionState>(Channel.UNLIMITED)
+
+    /**
+     * One buffered channel for the fake's whole life, not one per [recognize].
+     * Under `StandardTestDispatcher` the collector does not start until
+     * `advanceUntilIdle`, so a per-call channel would drop everything the test
+     * emitted between `onRecordStart()` and that point.
+     */
+    private val channel = Channel<RecognitionState>(Channel.UNLIMITED)
 
     var stopRecordingCalls = 0
         private set
@@ -311,10 +318,7 @@ private class FakeSpeechRecognizer : SpeechRecognizer {
         prepareCalls++
     }
 
-    override fun recognize(): Flow<RecognitionState> {
-        channel = Channel(Channel.UNLIMITED)
-        return channel.receiveAsFlow()
-    }
+    override fun recognize(): Flow<RecognitionState> = channel.receiveAsFlow()
 
     override fun stopRecording() {
         stopRecordingCalls++
