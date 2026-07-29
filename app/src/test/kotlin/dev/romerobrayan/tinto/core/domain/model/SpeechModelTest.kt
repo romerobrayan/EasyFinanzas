@@ -6,13 +6,9 @@ import org.junit.Assert.assertTrue
 import org.junit.Test
 
 /**
- * Pins the fail-closed rule around model checksums.
- *
- * The digests shipped today are placeholders — the environment that added this
- * feature could not reach the model host to compute them. That is only safe
- * because an unfilled checksum makes the model unusable rather than
- * unverified-but-accepted, and this test is what keeps that true if someone
- * later "tidies up" the placeholder.
+ * Pins the fail-closed rule around model checksums: a model without a
+ * full-length digest is unusable rather than unverified-but-accepted, and the
+ * shipped models must always carry real digests.
  */
 class SpeechModelTest {
 
@@ -21,7 +17,7 @@ class SpeechModelTest {
         val model = SpeechModel(
             id = "x.bin",
             url = "https://example.invalid/x.bin",
-            sha256 = SpeechModel.UNKNOWN_CHECKSUM,
+            sha256 = "",
             sizeBytes = 1L,
         )
         assertFalse(model.hasKnownChecksum)
@@ -50,12 +46,12 @@ class SpeechModelTest {
     }
 
     @Test
-    fun `the shipped models still carry placeholder digests`() {
-        // Deliberately asserts the current, known-incomplete state. When the real
-        // digests land this test fails, which is the reminder to delete it and
-        // the UNKNOWN_CHECKSUM path along with it.
-        assertFalse(SpeechModel.BASE_Q5_1.hasKnownChecksum)
-        assertFalse(SpeechModel.TINY_Q5_1.hasKnownChecksum)
+    fun `the shipped models carry real, distinct digests`() {
+        assertTrue(SpeechModel.BASE_Q5_1.hasKnownChecksum)
+        assertTrue(SpeechModel.TINY_Q5_1.hasKnownChecksum)
+        // Two different files can never share a digest; equal ones would mean a
+        // copy-paste slip that verification could not catch.
+        assertTrue(SpeechModel.BASE_Q5_1.sha256 != SpeechModel.TINY_Q5_1.sha256)
     }
 
     @Test

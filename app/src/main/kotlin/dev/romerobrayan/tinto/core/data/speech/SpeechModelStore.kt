@@ -86,7 +86,7 @@ class SpeechModelStore @Inject constructor(
                 return@withLock it
             }
             if (!model.hasKnownChecksum) {
-                // Fail closed. See SpeechModel.UNKNOWN_CHECKSUM.
+                // Fail closed. See SpeechModel.hasKnownChecksum.
                 state.value = SpeechModelState.Failed(ModelFailure.CHECKSUM_UNKNOWN)
                 return@withLock null
             }

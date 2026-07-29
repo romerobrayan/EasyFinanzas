@@ -174,24 +174,21 @@ The integrity rules are strict because the failure they prevent is silent:
 - Files live in `filesDir`, not `cacheDir`. The OS must not evict something the
   user waited minutes on mobile data for.
 
-**We fail closed.** `SpeechModel.sha256` currently holds a placeholder — the
-environment this feature was built in could not reach the model host, so the real
-digests could not be computed. Rather than trusting an unverified download, the
-store refuses with `CHECKSUM_UNKNOWN` and the feature reports the model as
-unusable.
-
-> **Before this ships:** fill both digests in `core/domain/model/SpeechModel.kt`
-> (`sha256sum ggml-base-q5_1.bin`, or the SHA-256 shown on the HuggingFace file
-> page), then delete `UNKNOWN_CHECKSUM` and the `CHECKSUM_UNKNOWN` path.
-> `SpeechModelTest` fails once the digests are real, which is the reminder.
+**We fail closed.** A model whose `SpeechModel.sha256` is not a full-length
+digest is refused with `CHECKSUM_UNKNOWN` rather than downloaded unverified. The
+two shipped models carry the digests published on their HuggingFace file pages;
+the guard stays because it protects the *next* model someone adds before its
+digest is known. If upstream ever re-uploads a model file, downloads start
+failing with `CHECKSUM_MISMATCH` — that is the alarm working, not a bug.
 
 ## Native build
 
 whisper.cpp is fetched at CMake configure time rather than vendored, so we do not
-carry ~100k lines of third-party C++ in our history.
-
-> **Also before this ships:** `GIT_TAG` in `app/src/main/cpp/CMakeLists.txt` is a
-> tag, and tags are mutable. Pin the full commit SHA once CI has resolved it once.
+carry ~100k lines of third-party C++ in our history. The fetch is pinned to a
+full commit SHA (the commit tag `v1.7.4` points at), not the tag name — tags are
+mutable, and the native code in a build of a finance app must not be able to
+change underneath us. Upgrading is: pick the new tag, `git ls-remote` its
+commit, replace the hash in `app/src/main/cpp/CMakeLists.txt`.
 
 Both ABIs are built:
 

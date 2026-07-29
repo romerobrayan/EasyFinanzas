@@ -110,7 +110,7 @@ class SpeechModelStoreTest {
 
     @Test
     fun aModelWithNoKnownChecksumIsRefusedWithoutDownloading() = runTest {
-        val model = modelWith(sha256 = SpeechModel.UNKNOWN_CHECKSUM)
+        val model = modelWith(sha256 = "")
 
         val file = store.ensure(model)
 

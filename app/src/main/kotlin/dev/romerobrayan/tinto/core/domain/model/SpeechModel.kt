@@ -24,40 +24,31 @@ data class SpeechModel(
     val sizeBytes: Long,
 ) {
     /**
-     * True when [sha256] is still the unfilled placeholder. The download refuses
-     * to hand back a model it cannot verify — see `SpeechModelStore`.
+     * A model without a full-length digest is refused by the store rather than
+     * downloaded unverified — the guard for a future model added before its
+     * digest is known. See `SpeechModelStore`.
      */
     val hasKnownChecksum: Boolean
-        get() = sha256.length == SHA256_HEX_LENGTH && sha256 != UNKNOWN_CHECKSUM
+        get() = sha256.length == SHA256_HEX_LENGTH
 
     companion object {
         const val SHA256_HEX_LENGTH: Int = 64
 
-        /**
-         * Placeholder for a checksum we do not have yet.
-         *
-         * The build environment that introduced this feature could not reach
-         * `huggingface.co`, so the real digests could not be computed. Fill them
-         * in from the model files (`sha256sum ggml-base-q5_1.bin`, or the SHA-256
-         * shown on the HuggingFace file page) before shipping. Until then the
-         * store fails with [ModelFailure.CHECKSUM_UNKNOWN] rather than trusting
-         * an unverified download.
-         */
-        const val UNKNOWN_CHECKSUM: String = ""
-
-        // TODO(sprint-N): fill both digests from the real files, then delete
-        //  UNKNOWN_CHECKSUM and the CHECKSUM_UNKNOWN failure path.
+        // Digests are the values published on the HuggingFace file pages for
+        // ggerganov/whisper.cpp. If upstream ever re-uploads a model file, the
+        // download will fail CHECKSUM_MISMATCH — that is the alarm going off,
+        // not a bug: re-verify against the file page before updating these.
         val BASE_Q5_1: SpeechModel = SpeechModel(
             id = "ggml-base-q5_1.bin",
             url = "https://huggingface.co/ggerganov/whisper.cpp/resolve/main/ggml-base-q5_1.bin",
-            sha256 = UNKNOWN_CHECKSUM,
+            sha256 = "422f1ae452ade6f30a004d7e5c6a43195e4433bc370bf23fac9cc591f01a8898",
             sizeBytes = 57_000_000L,
         )
 
         val TINY_Q5_1: SpeechModel = SpeechModel(
             id = "ggml-tiny-q5_1.bin",
             url = "https://huggingface.co/ggerganov/whisper.cpp/resolve/main/ggml-tiny-q5_1.bin",
-            sha256 = UNKNOWN_CHECKSUM,
+            sha256 = "818710568da3ca15689e31a743197b520007872ff9576237bda97bd1b469c3d7",
             sizeBytes = 31_000_000L,
         )
     }
@@ -94,7 +85,7 @@ enum class ModelFailure {
     /** The file downloaded but hashed to something else. It was deleted. */
     CHECKSUM_MISMATCH,
 
-    /** We have no expected digest to compare against — see [SpeechModel.UNKNOWN_CHECKSUM]. */
+    /** The model carries no expected digest — see [SpeechModel.hasKnownChecksum]. */
     CHECKSUM_UNKNOWN,
 
     /** No room, or the file could not be written. */

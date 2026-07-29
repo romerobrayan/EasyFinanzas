@@ -5,12 +5,6 @@ project(tinto_whisper CXX)
 # whisper.cpp is pulled at configure time rather than vendored into the repo, so
 # upgrading is a one-line change and we are not carrying ~100k lines of someone
 # else's C++ in our history.
-#
-# TODO(sprint-N): replace GIT_TAG with a full 40-character commit SHA. A tag is
-#  mutable; this app writes to a ledger and a build should not be able to change
-#  underneath us. The tag below could not be verified from the environment this
-#  was written in (github.com was unreachable) — confirm it resolves on the
-#  first CI run and pin the SHA it produced.
 include(FetchContent)
 
 set(WHISPER_BUILD_TESTS    OFF CACHE BOOL "" FORCE)
@@ -22,10 +16,13 @@ set(BUILD_SHARED_LIBS      OFF CACHE BOOL "" FORCE)
 # what n_threads drives from the Kotlin side.
 set(GGML_OPENMP OFF CACHE BOOL "" FORCE)
 
+# Pinned to the exact commit tag v1.7.4 points at today. A tag name is mutable;
+# a full SHA means the native code in this build can never change underneath us.
+# To upgrade: pick the new tag, `git ls-remote` its commit, replace the hash.
 FetchContent_Declare(
     whisper
     GIT_REPOSITORY https://github.com/ggml-org/whisper.cpp.git
-    GIT_TAG        v1.7.4
+    GIT_TAG        8a9ad7844d6e2a10cddf4b92de4089d7ac2b14a9 # v1.7.4
     GIT_SHALLOW    TRUE
 )
 FetchContent_MakeAvailable(whisper)
