@@ -61,14 +61,24 @@ class WhisperSpeechRecognizer @Inject constructor(
         store.ensure(model)
     }
 
-    override fun recognize(): Flow<RecognitionState> = channelFlow {
+    override fun recognize(): Flow<RecognitionState> {
+        // Reset here, in the factory, NOT inside the flow body. The button
+        // release can land before the collecting coroutine has even started;
+        // resetting inside the flow would erase that early stop request and a
+        // quick tap would record silence until the 15 s cap — which Whisper then
+        // hallucinates over. The ViewModel calls recognize() synchronously on
+        // press, so this write always precedes the matching stopRecording().
+        stopRequested = false
+        return recognitionFlow()
+    }
+
+    private fun recognitionFlow(): Flow<RecognitionState> = channelFlow {
         val modelFile = store.resolve(model)
         if (modelFile == null || !WhisperNative.isAvailable) {
             send(RecognitionState.Error(RecognitionFailure.MODEL_UNAVAILABLE))
             return@channelFlow
         }
 
-        stopRequested = false
         val audio = try {
             recorder.record(
                 maxMillis = MAX_RECORDING_MILLIS,
@@ -84,6 +94,12 @@ class WhisperSpeechRecognizer @Inject constructor(
         }
 
         send(RecognitionState.Transcribing)
+
+        // VOICE_RECOGNITION disables automatic gain control on many devices, so
+        // the capture can arrive far quieter than Whisper's training data. A
+        // too-quiet clip is one of the two classic hallucination triggers (the
+        // other is silence); lift it before inference.
+        normalizePeak(audio)
 
         val transcript = withContext(nativeDispatcher) { transcribe(modelFile, audio) }
 
@@ -161,5 +177,28 @@ class WhisperSpeechRecognizer @Inject constructor(
 
         fun String.cleanTranscript(): String =
             replace(NON_SPEECH, " ").replace(Regex("""\s+"""), " ").trim()
+
+        /** Don't touch a clip that is already at a healthy level. */
+        const val NORMALIZE_TARGET_PEAK = 0.9f
+
+        /** Below this the clip is effectively silence — amplifying it is noise. */
+        const val NORMALIZE_MIN_PEAK = 0.001f
+
+        /** Cap the boost so a near-silent room does not become a wall of hiss. */
+        const val NORMALIZE_MAX_GAIN = 30f
+
+        /** In-place peak normalization. No-op on silence and on healthy audio. */
+        fun normalizePeak(audio: FloatArray) {
+            var peak = 0f
+            for (sample in audio) {
+                val magnitude = kotlin.math.abs(sample)
+                if (magnitude > peak) peak = magnitude
+            }
+            if (peak < NORMALIZE_MIN_PEAK || peak >= NORMALIZE_TARGET_PEAK) return
+            val gain = (NORMALIZE_TARGET_PEAK / peak).coerceAtMost(NORMALIZE_MAX_GAIN)
+            for (index in audio.indices) {
+                audio[index] = audio[index] * gain
+            }
+        }
     }
 }

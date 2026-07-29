@@ -106,6 +106,18 @@ the default is editing one value, not rewriting a layer. That is deliberate,
 because the decision above is the one most likely to change once real audio
 exists.
 
+## First field result (2026-07-29)
+
+The first real-device test — one user, Colombian Spanish, `base-q5_1` on
+arm64 — produced hallucinated, out-of-context transcripts on the reference
+phrase. That output pattern points at the audio/decoding pipeline (silence or
+too-quiet capture, greedy decoding) rather than purely at model capacity, and
+three fixes shipped in response: a press/release race that could record 15 s of
+silence, peak normalization before inference, and beam search plus a
+domain-biased initial prompt. The model-quality verdict is therefore **still
+open** — it needs a retest on the fixed pipeline before concluding that
+`small-q5_1` is the floor.
+
 ## What would settle it
 
 Five clips, both models, comparing transcripts word-for-word on the amount and

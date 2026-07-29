@@ -58,6 +58,11 @@ interface SpeechRecognizer {
      * The caller must hold `RECORD_AUDIO`; without it this fails with
      * [dev.romerobrayan.tinto.core.domain.model.RecognitionFailure.MICROPHONE_UNAVAILABLE]
      * rather than throwing.
+     *
+     * **Call this synchronously on the press gesture**, then collect the
+     * returned flow. The call itself opens the session: a [stopRecording]
+     * issued any time after it returns applies to this session, even if
+     * collection has not started yet — which is exactly what a fast tap does.
      */
     fun recognize(): Flow<RecognitionState>
 

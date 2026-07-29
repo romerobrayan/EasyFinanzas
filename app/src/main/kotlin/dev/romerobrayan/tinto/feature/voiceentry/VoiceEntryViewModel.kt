@@ -93,8 +93,13 @@ class VoiceEntryViewModel @Inject constructor(
     fun onRecordStart() {
         if (!state.value.canRecord || recognitionJob?.isActive == true) return
         state.update { it.copy(errorRes = null, transcript = "", phase = VoicePhase.Idle) }
+        // recognize() is called HERE, synchronously, not inside the launch: its
+        // factory resets the stop flag, and a fast tap can deliver onRecordStop
+        // before the coroutine below ever runs. Built eagerly, press strictly
+        // precedes release; built lazily, a quick tap recorded 15 s of silence.
+        val recognitionFlow = recognizer.recognize()
         recognitionJob = viewModelScope.launch {
-            recognizer.recognize().collect { recognition ->
+            recognitionFlow.collect { recognition ->
                 state.update { current ->
                     when (recognition) {
                         is RecognitionState.Idle ->

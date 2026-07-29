@@ -210,6 +210,30 @@ call site.
 Language is pinned to `es` rather than auto-detected: we know the user's
 language, and detection costs an extra pass and can pick wrong on short clips.
 
+### Decoding parameters
+
+The first field test (see the results note in `stt-whisper-model-choice.md`)
+produced hallucinated, out-of-context transcripts — the signature of Whisper
+receiving silence or too-quiet audio, not of a merely-weak model. Three levers
+address it, all cheaper than a bigger model:
+
+- **Beam search (`beam_size = 5`) instead of greedy.** Greedy compounds every
+  slightly-wrong token, and on a q5-quantized model that gap is large. Costs
+  inference time, which `Transcribing` already models.
+- **A domain `initial_prompt`.** Whisper conditions on it as preceding speech;
+  a Spanish sentence full of spelled-out peso amounts biases the decoder toward
+  exactly the vocabulary this feature exists to capture.
+- **Peak normalization before inference** (Kotlin side). The
+  `VOICE_RECOGNITION` audio source disables AGC on many devices, and a
+  too-quiet clip is a classic hallucination trigger. Silence and healthy audio
+  are left untouched; the boost is capped so a quiet room does not become hiss.
+
+Related capture rule: `recognize()` must be called synchronously on the press
+gesture. The call opens the session and arms `stopRecording()`; built lazily
+inside the collecting coroutine, a fast tap could deliver the release before
+collection started, losing the stop and recording 15 s of silence — which
+Whisper then hallucinates over.
+
 ## Falling back to the platform recognizer
 
 If on-device Whisper has to go — the APK grows too much, the latency proves

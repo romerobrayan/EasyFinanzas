@@ -78,7 +78,12 @@ Java_dev_romerobrayan_tinto_core_data_speech_WhisperNative_transcribe(
     std::vector<float> samples(static_cast<size_t>(sample_count));
     env->GetFloatArrayRegion(audio, 0, sample_count, samples.data());
 
-    whisper_full_params params = whisper_full_default_params(WHISPER_SAMPLING_GREEDY);
+    // Beam search, not greedy: on a q5-quantized model greedy compounds every
+    // slightly-wrong token, and the accuracy gap on short Spanish clips is large.
+    // The cost is inference time, which the UI already models as Transcribing.
+    whisper_full_params params = whisper_full_default_params(WHISPER_SAMPLING_BEAM_SEARCH);
+    params.beam_search.beam_size = 5;
+    params.greedy.best_of        = 5;  // used by the temperature-fallback path
     // Pinned to Spanish rather than auto-detected: we know the user's language,
     // and detection costs an extra encoder pass and can pick wrong on short clips.
     params.language        = "es";
@@ -86,6 +91,13 @@ Java_dev_romerobrayan_tinto_core_data_speech_WhisperNative_transcribe(
     params.n_threads       = threads;
     params.no_context      = true;
     params.suppress_blank  = true;
+    // Whisper conditions on this as if it were preceding speech. Biasing the
+    // decoder toward Colombian-Spanish expense phrasing with spelled-out number
+    // words is the cheapest accuracy lever there is for this exact payload.
+    params.initial_prompt =
+        "Estoy registrando mis gastos en pesos colombianos. "
+        "Gasté veinte mil pesos en el almuerzo, pagué cincuenta y cinco mil "
+        "en el mercado y treinta mil de transporte.";
     params.print_progress  = false;
     params.print_realtime  = false;
     params.print_timestamps = false;
