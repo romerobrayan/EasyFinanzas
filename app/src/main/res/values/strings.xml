@@ -27,6 +27,21 @@
     <string name="dashboard_see_all">Ver todos</string>
     <string name="dashboard_empty_period">Sin movimientos en este período</string>
 
+    <!-- Spoken month summary (text-to-speech). Amounts are read as bare digits;
+         the engine says them in words, so these templates supply "pesos". -->
+    <string name="tts_summary_total">En %1$s gastaste %2$s pesos.</string>
+    <string name="tts_summary_empty">En %1$s no registraste gastos.</string>
+    <string name="tts_summary_comparison_down">Un %1$d por ciento menos que en %2$s.</string>
+    <string name="tts_summary_comparison_up">Un %1$d por ciento más que en %2$s.</string>
+    <string name="tts_summary_comparison_equal">Igual que en %1$s.</string>
+    <string name="tts_summary_top_category">Tu mayor gasto fue %1$s, con %2$s pesos.</string>
+    <string name="tts_error_engine_unavailable">Este dispositivo no tiene un motor de voz disponible</string>
+    <string name="tts_error_language_not_supported">El motor de voz no tiene español disponible</string>
+    <string name="tts_error_missing_voice_data">Falta descargar la voz en español</string>
+    <string name="tts_error_synthesis_failed">No pudimos reproducir el resumen</string>
+    <string name="cd_tts_play">Escuchar el resumen del mes</string>
+    <string name="cd_tts_stop">Detener la lectura</string>
+
     <!-- Month / statement sheet -->
     <string name="month_sheet_title">Selecciona un extracto</string>
     <string name="cd_month_selector">Seleccionar mes</string>

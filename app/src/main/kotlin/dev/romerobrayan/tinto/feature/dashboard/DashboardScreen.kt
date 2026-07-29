@@ -19,6 +19,9 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.MarkChatUnread
 import androidx.compose.material.icons.rounded.ArrowDownward
 import androidx.compose.material.icons.rounded.ArrowUpward
+import androidx.compose.material.icons.rounded.Stop
+import androidx.compose.material.icons.rounded.VolumeUp
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
@@ -72,6 +75,7 @@ fun DashboardScreen(
         onEditMovement = onEditMovement,
         onDeleteMovement = viewModel::onDeleteMovement,
         onReviewPending = onReviewPending,
+        onSpeakToggled = viewModel::onSpeakToggled,
         modifier = modifier,
     )
 }
@@ -87,6 +91,7 @@ private fun DashboardContent(
     onEditMovement: (String) -> Unit,
     onDeleteMovement: (String) -> Unit,
     onReviewPending: () -> Unit,
+    onSpeakToggled: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
     val type = LocalTintoTypography.current
@@ -101,11 +106,24 @@ private fun DashboardContent(
             .padding(horizontal = 18.dp),
     ) {
         Spacer(Modifier.height(8.dp))
-        Text(
-            text = stringResource(R.string.app_name),
-            style = type.screenTitle,
-            color = MaterialTheme.colorScheme.onBackground,
-        )
+        Row(verticalAlignment = Alignment.CenterVertically) {
+            Text(
+                text = stringResource(R.string.app_name),
+                style = type.screenTitle,
+                color = MaterialTheme.colorScheme.onBackground,
+                modifier = Modifier.weight(1f),
+            )
+            SpeakSummaryControl(speech = state.speech, onToggle = onSpeakToggled)
+        }
+
+        (state.speech as? SpeechUiState.Error)?.let { error ->
+            Spacer(Modifier.height(6.dp))
+            Text(
+                text = stringResource(error.messageRes),
+                style = type.caption,
+                color = MaterialTheme.colorScheme.error,
+            )
+        }
 
         if (state.pendingCount > 0) {
             Spacer(Modifier.height(14.dp))
@@ -236,6 +254,43 @@ private fun DashboardContent(
 }
 
 /** "Detectamos N movimientos nuevos" + Revisar — never raw capture text. */
+/**
+ * Play/stop for the spoken month summary. Stays private to this screen — it is
+ * one control in one place, so it has not earned a slot in the design system yet.
+ */
+@Composable
+private fun SpeakSummaryControl(speech: SpeechUiState, onToggle: () -> Unit) {
+    val tinto = LocalTintoColors.current
+    val isSpeaking = speech is SpeechUiState.Speaking
+
+    Box(
+        modifier = Modifier
+            .size(40.dp)
+            .clip(PillShape)
+            .background(MaterialTheme.colorScheme.surfaceVariant)
+            .clickable(onClick = onToggle),
+        contentAlignment = Alignment.Center,
+    ) {
+        if (speech is SpeechUiState.Preparing) {
+            // Same footprint as the icon so the header does not jump.
+            CircularProgressIndicator(
+                modifier = Modifier.size(18.dp),
+                color = tinto.gold,
+                strokeWidth = 2.dp,
+            )
+        } else {
+            Icon(
+                imageVector = if (isSpeaking) Icons.Rounded.Stop else Icons.Rounded.VolumeUp,
+                contentDescription = stringResource(
+                    if (isSpeaking) R.string.cd_tts_stop else R.string.cd_tts_play,
+                ),
+                tint = if (isSpeaking) tinto.gold else MaterialTheme.colorScheme.onSurfaceVariant,
+                modifier = Modifier.size(20.dp),
+            )
+        }
+    }
+}
+
 @Composable
 private fun PendingBanner(count: Int, onReview: () -> Unit) {
     val type = LocalTintoTypography.current

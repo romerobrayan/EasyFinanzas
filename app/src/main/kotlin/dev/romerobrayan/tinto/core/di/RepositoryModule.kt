@@ -13,13 +13,17 @@ import dev.romerobrayan.tinto.core.data.repository.SyncedCardRepository
 import dev.romerobrayan.tinto.core.data.repository.SyncedCategoryRepository
 import dev.romerobrayan.tinto.core.data.repository.SyncedReminderRepository
 import dev.romerobrayan.tinto.core.data.repository.SyncedTransactionRepository
+import dev.romerobrayan.tinto.core.data.speech.AndroidTtsSynthesizer
+import dev.romerobrayan.tinto.core.data.speech.ResourceMonthSummaryNarrator
 import dev.romerobrayan.tinto.core.domain.repository.AuthRepository
 import dev.romerobrayan.tinto.core.domain.repository.CardRepository
 import dev.romerobrayan.tinto.core.domain.repository.CategoryRepository
+import dev.romerobrayan.tinto.core.domain.repository.MonthSummaryNarrator
 import dev.romerobrayan.tinto.core.domain.repository.PendingTransactionRepository
 import dev.romerobrayan.tinto.core.domain.repository.NotificationCapture
 import dev.romerobrayan.tinto.core.domain.repository.ReminderRepository
 import dev.romerobrayan.tinto.core.domain.repository.SmsCapture
+import dev.romerobrayan.tinto.core.domain.repository.SpeechSynthesizer
 import dev.romerobrayan.tinto.core.domain.repository.TransactionParser
 import dev.romerobrayan.tinto.core.domain.repository.TransactionRepository
 
@@ -63,4 +67,12 @@ abstract class RepositoryModule {
 
     @Binds
     abstract fun bindNotificationCapture(impl: NotificationCaptureManager): NotificationCapture
+
+    // Text-to-speech: swapping the on-device engine for a cloud provider is
+    // rebinding this one line — see docs/tts.md.
+    @Binds
+    abstract fun bindSpeechSynthesizer(impl: AndroidTtsSynthesizer): SpeechSynthesizer
+
+    @Binds
+    abstract fun bindMonthSummaryNarrator(impl: ResourceMonthSummaryNarrator): MonthSummaryNarrator
 }
