@@ -32,6 +32,7 @@ data object PendingRoute
  */
 @Serializable
 data object VoiceEntryRoute
+
 /** The automation-rules manager (Sprint 5): pause/resume or delete rules. */
 @Serializable
 data object RecurringRulesRoute
