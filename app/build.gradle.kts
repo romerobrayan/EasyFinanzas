@@ -12,12 +12,41 @@ android {
     namespace = "dev.romerobrayan.tinto"
     compileSdk = 37
 
+    // whisper.cpp is built from source (see src/main/cpp/CMakeLists.txt). r28 is
+    // the floor: it emits 16 KB-aligned segments by default, which Android 15+
+    // devices require to load a .so at all.
+    ndkVersion = "28.0.13004108"
+
     defaultConfig {
         applicationId = "dev.romerobrayan.tinto"
         minSdk = 26
         targetSdk = 36
         versionCode = 1
         versionName = "0.1.0"
+
+        testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
+
+        ndk {
+            // The two ABIs still shipping on Colombian handsets. x86 variants are
+            // emulator-only and would double native build time for no user.
+            abiFilters += listOf("arm64-v8a", "armeabi-v7a")
+        }
+
+        externalNativeBuild {
+            cmake {
+                arguments += listOf(
+                    "-DANDROID_ARM_NEON=TRUE",
+                    "-DCMAKE_BUILD_TYPE=Release",
+                )
+            }
+        }
+    }
+
+    externalNativeBuild {
+        cmake {
+            path = file("src/main/cpp/CMakeLists.txt")
+            version = "3.22.1"
+        }
     }
 
     signingConfigs {
@@ -87,6 +116,12 @@ dependencies {
 
     testImplementation(libs.junit)
     testImplementation(libs.kotlinx.coroutines.test)
+
+    // Instrumented tests exist for one reason: the model download needs a real
+    // filesystem and a real HttpURLConnection, neither of which a JVM fake proves.
+    androidTestImplementation(libs.androidx.test.ext.junit)
+    androidTestImplementation(libs.androidx.test.runner)
+    androidTestImplementation(libs.kotlinx.coroutines.test)
 
     debugImplementation(libs.compose.ui.tooling)
 }

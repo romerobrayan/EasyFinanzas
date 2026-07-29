@@ -25,6 +25,13 @@ data class AddTransactionRoute(
 @Serializable
 data object PendingRoute
 
+/**
+ * Voice entry: dictate a movement and get an editable transcript back.
+ * Transcription only for now — the confirmed text is handed to the
+ * add-transaction form verbatim. See `docs/stt-whisper.md`.
+ */
+@Serializable
+data object VoiceEntryRoute
 /** The automation-rules manager (Sprint 5): pause/resume or delete rules. */
 @Serializable
 data object RecurringRulesRoute

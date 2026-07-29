@@ -24,6 +24,7 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.rounded.Close
 import androidx.compose.material.icons.rounded.Event
+import androidx.compose.material.icons.rounded.Mic
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Icon
@@ -80,6 +81,9 @@ import kotlinx.datetime.LocalDate
 fun AddTransactionScreen(
     onClose: () -> Unit,
     modifier: Modifier = Modifier,
+    onDictate: () -> Unit = {},
+    dictatedText: String? = null,
+    onDictatedTextConsumed: () -> Unit = {},
     viewModel: AddTransactionViewModel = hiltViewModel(),
 ) {
     val state by viewModel.uiState.collectAsStateWithLifecycle()
@@ -88,9 +92,22 @@ fun AddTransactionScreen(
         viewModel.saved.collect { onClose() }
     }
 
+    // A dictated transcript arrives as a nav result. It lands in the merchant
+    // field verbatim — the parser that would split it into an amount, a category
+    // and a merchant is the next sprint.
+    // TODO(sprint-N): parse the transcript into an ExpenseDraft instead of
+    //  dropping the whole sentence into one field.
+    LaunchedEffect(dictatedText) {
+        dictatedText?.let {
+            viewModel.onMerchantChanged(it)
+            onDictatedTextConsumed()
+        }
+    }
+
     AddTransactionContent(
         state = state,
         onClose = onClose,
+        onDictate = onDictate,
         onAmountChanged = viewModel::onAmountChanged,
         onTypeChanged = viewModel::onTypeChanged,
         onMethodChanged = viewModel::onMethodChanged,
@@ -112,6 +129,7 @@ fun AddTransactionScreen(
 private fun AddTransactionContent(
     state: AddTransactionUiState,
     onClose: () -> Unit,
+    onDictate: () -> Unit,
     onAmountChanged: (String) -> Unit,
     onTypeChanged: (TransactionType) -> Unit,
     onMethodChanged: (PaymentMethod) -> Unit,
@@ -327,6 +345,15 @@ private fun AddTransactionContent(
             singleLine = true,
             colors = tintoTextFieldColors(),
             shape = ButtonShape,
+            trailingIcon = {
+                IconButton(onClick = onDictate) {
+                    Icon(
+                        imageVector = Icons.Rounded.Mic,
+                        contentDescription = stringResource(R.string.cd_stt_open),
+                        tint = MaterialTheme.colorScheme.primary,
+                    )
+                }
+            },
             modifier = Modifier.fillMaxWidth(),
         )
 

@@ -17,7 +17,9 @@ permissions:
 jobs:
   build:
     runs-on: ubuntu-latest
-    timeout-minutes: 45
+    # Native builds whisper.cpp twice (arm64-v8a + armeabi-v7a) from a fresh
+    # FetchContent clone, which is most of the wall clock here.
+    timeout-minutes: 75
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -30,6 +32,13 @@ jobs:
 
       - name: Set up Gradle
         uses: gradle/actions/setup-gradle@v4
+
+      # whisper.cpp is compiled from source for both ABIs. The runner image ships
+      # an NDK, but not necessarily the version pinned in app/build.gradle.kts.
+      - name: Install NDK and CMake
+        run: |
+          "${ANDROID_HOME}/cmdline-tools/latest/bin/sdkmanager" --install \
+            "ndk;28.0.13004108" "cmake;3.22.1"
 
       - name: Build, unit tests and lint
         run: ./gradlew assembleDebug testDebugUnitTest lint --stacktrace
