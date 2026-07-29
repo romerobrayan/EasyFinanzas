@@ -70,6 +70,10 @@ class FirebaseTintoAnalytics @Inject constructor() : TintoAnalytics {
         analytics.logEvent("reminder_paid", bundleOf("recurrence" to recurrence))
     }
 
+    override fun logRecurringRuleCreated(frequency: String) {
+        analytics.logEvent("recurring_rule_created", bundleOf("frequency" to frequency))
+    }
+
     override fun logReminderNotificationShown(recurrence: String) {
         analytics.logEvent("reminder_notification_shown", bundleOf("recurrence" to recurrence))
     }

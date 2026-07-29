@@ -22,6 +22,7 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.outlined.Logout
+import androidx.compose.material.icons.outlined.Autorenew
 import androidx.compose.material.icons.outlined.CreditCard
 import androidx.compose.material.icons.outlined.Email
 import androidx.compose.material.icons.outlined.FileDownload
@@ -61,6 +62,7 @@ import dev.romerobrayan.tinto.core.domain.model.Card
 @Composable
 fun ProfileScreen(
     modifier: Modifier = Modifier,
+    onManageRecurring: () -> Unit = {},
     viewModel: ProfileViewModel = hiltViewModel(),
 ) {
     val state by viewModel.uiState.collectAsStateWithLifecycle()
@@ -101,6 +103,7 @@ fun ProfileScreen(
         onSignOut = viewModel::onSignOut,
         onAddCardClick = viewModel::onAddCardClick,
         onCardClick = viewModel::onCardClick,
+        onManageRecurring = onManageRecurring,
         onSmsCaptureClick = {
             if (state.smsCaptureEnabled) {
                 showCaptureDisableConfirm = true
@@ -202,6 +205,7 @@ private fun ProfileContent(
     onSignOut: () -> Unit,
     onAddCardClick: () -> Unit,
     onCardClick: (Card) -> Unit,
+    onManageRecurring: () -> Unit,
     onSmsCaptureClick: () -> Unit,
     onNotificationCaptureClick: () -> Unit,
     modifier: Modifier = Modifier,
@@ -349,6 +353,44 @@ private fun ProfileContent(
                 style = type.body.copy(fontWeight = FontWeight.Medium),
                 color = MaterialTheme.colorScheme.onBackground,
             )
+        }
+
+        Spacer(Modifier.height(28.dp))
+        Text(
+            text = stringResource(R.string.profile_automation_section),
+            style = type.sectionTitle,
+            color = MaterialTheme.colorScheme.onBackground,
+        )
+        Spacer(Modifier.height(10.dp))
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .clip(ButtonShape)
+                .background(MaterialTheme.colorScheme.surfaceVariant)
+                .clickable(onClick = onManageRecurring)
+                .padding(14.dp),
+            verticalAlignment = Alignment.CenterVertically,
+        ) {
+            Icon(
+                imageVector = Icons.Outlined.Autorenew,
+                contentDescription = null,
+                tint = tinto.gold,
+                modifier = Modifier.size(22.dp),
+            )
+            Spacer(Modifier.width(12.dp))
+            Column {
+                Text(
+                    text = stringResource(R.string.profile_recurring),
+                    style = type.body.copy(fontWeight = FontWeight.Medium),
+                    color = MaterialTheme.colorScheme.onBackground,
+                )
+                Spacer(Modifier.height(2.dp))
+                Text(
+                    text = stringResource(R.string.profile_recurring_hint),
+                    style = type.caption,
+                    color = tinto.muted,
+                )
+            }
         }
 
         Spacer(Modifier.height(28.dp))

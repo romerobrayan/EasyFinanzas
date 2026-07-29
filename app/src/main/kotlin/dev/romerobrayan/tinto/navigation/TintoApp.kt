@@ -19,6 +19,7 @@ import dev.romerobrayan.tinto.feature.dashboard.DashboardScreen
 import dev.romerobrayan.tinto.feature.movements.MovementsScreen
 import dev.romerobrayan.tinto.feature.pending.PendingReviewScreen
 import dev.romerobrayan.tinto.feature.profile.ProfileScreen
+import dev.romerobrayan.tinto.feature.recurring.RecurringRulesScreen
 import dev.romerobrayan.tinto.feature.reminders.RemindersScreen
 import dev.romerobrayan.tinto.feature.voiceentry.VoiceEntryScreen
 
@@ -61,6 +62,7 @@ fun TintoApp(
         currentDestination.hasRoute<AddTransactionRoute>() -> "add_transaction"
         currentDestination.hasRoute<PendingRoute>() -> "pending_review"
         currentDestination.hasRoute<VoiceEntryRoute>() -> "voice_entry"
+        currentDestination.hasRoute<RecurringRulesRoute>() -> "recurring_rules"
         currentDestination.hasRoute<RemindersRoute>() -> "reminders"
         currentDestination.hasRoute<ProfileRoute>() -> "profile"
         else -> null
@@ -129,7 +131,12 @@ fun TintoApp(
                 RemindersScreen()
             }
             composable<ProfileRoute> {
-                ProfileScreen()
+                ProfileScreen(
+                    onManageRecurring = { navController.navigate(RecurringRulesRoute) },
+                )
+            }
+            composable<RecurringRulesRoute> {
+                RecurringRulesScreen(onClose = { navController.popBackStack() })
             }
         }
     }

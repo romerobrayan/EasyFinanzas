@@ -4,14 +4,21 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.size
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.outlined.AccountBalance
 import androidx.compose.material.icons.outlined.BugReport
 import androidx.compose.material.icons.outlined.DirectionsBus
+import androidx.compose.material.icons.outlined.Home
 import androidx.compose.material.icons.outlined.MonitorHeart
 import androidx.compose.material.icons.outlined.MoreHoriz
+import androidx.compose.material.icons.outlined.Payments
+import androidx.compose.material.icons.outlined.ReceiptLong
 import androidx.compose.material.icons.outlined.Repeat
 import androidx.compose.material.icons.outlined.Restaurant
+import androidx.compose.material.icons.outlined.Savings
 import androidx.compose.material.icons.outlined.ShoppingCart
+import androidx.compose.material.icons.outlined.SwapHoriz
 import androidx.compose.material.icons.outlined.Tv
+import androidx.compose.material.icons.outlined.Warning
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
@@ -63,6 +70,15 @@ private fun glyphFor(iconKey: String): ImageVector = when (iconKey) {
     "bus" -> Icons.Outlined.DirectionsBus
     "repeat" -> Icons.Outlined.Repeat
     "shopping-cart" -> Icons.Outlined.ShoppingCart
+    // Gasto (Sprint 5)
+    "home" -> Icons.Outlined.Home
+    "alert" -> Icons.Outlined.Warning
+    // Ingreso (Sprint 5)
+    "payroll" -> Icons.Outlined.Payments
+    "debt" -> Icons.Outlined.ReceiptLong
+    "loan" -> Icons.Outlined.AccountBalance
+    "transfer" -> Icons.Outlined.SwapHoriz
+    "contribution" -> Icons.Outlined.Savings
     else -> Icons.Outlined.MoreHoriz
 }
 
