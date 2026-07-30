@@ -195,6 +195,7 @@
     <string name="card_form_error_last4">Ingresa los 4 dígitos de la tarjeta</string>
     <string name="card_delete_confirm_title">¿Eliminar tarjeta?</string>
     <string name="card_delete_confirm_message">Tus movimientos no se modifican; los que usaban esta tarjeta quedan sin asociar.</string>
+    <string name="profile_cards_empty">Aún no tienes tarjetas. Agrégalas para asociar tus movimientos y reconocer los cobros que llegan por SMS.</string>
     <string name="profile_automation_section">Automatización</string>
     <string name="profile_recurring">Movimientos automáticos</string>
     <string name="profile_recurring_hint">Gestiona los movimientos que se repiten solos</string>

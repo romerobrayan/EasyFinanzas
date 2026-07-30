@@ -279,6 +279,14 @@ private fun ProfileContent(
             color = MaterialTheme.colorScheme.onBackground,
         )
         Spacer(Modifier.height(4.dp))
+        if (state.cards.isEmpty()) {
+            Text(
+                text = stringResource(R.string.profile_cards_empty),
+                style = type.caption,
+                color = tinto.muted,
+                modifier = Modifier.padding(vertical = 8.dp),
+            )
+        }
         state.cards.forEachIndexed { index, card ->
             Row(
                 modifier = Modifier
@@ -400,34 +408,48 @@ private fun ProfileContent(
             color = MaterialTheme.colorScheme.onBackground,
         )
         Spacer(Modifier.height(10.dp))
+        // Not clickable until the Storage Access Framework export exists: a row
+        // that ripples and does nothing reads as a broken app, so it carries the
+        // same "Próximamente" tag the Gmail permission row uses.
+        // TODO(sprint-N): real JSON export via the Storage Access Framework.
         Row(
             modifier = Modifier
                 .fillMaxWidth()
                 .clip(ButtonShape)
                 .background(MaterialTheme.colorScheme.surfaceVariant)
-                .clickable {
-                    // TODO(sprint-3): real JSON export via the Storage Access Framework.
-                }
                 .padding(14.dp),
             verticalAlignment = Alignment.CenterVertically,
         ) {
             Icon(
                 imageVector = Icons.Outlined.FileDownload,
                 contentDescription = null,
-                tint = tinto.gold,
+                tint = tinto.muted,
                 modifier = Modifier.size(22.dp),
             )
             Spacer(Modifier.width(12.dp))
-            Column {
+            Column(Modifier.weight(1f)) {
                 Text(
                     text = stringResource(R.string.profile_export),
                     style = type.body.copy(fontWeight = FontWeight.Medium),
-                    color = MaterialTheme.colorScheme.onBackground,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
                 )
                 Spacer(Modifier.height(2.dp))
                 Text(
                     text = stringResource(R.string.profile_export_hint),
                     style = type.caption,
+                    color = tinto.muted,
+                )
+            }
+            Spacer(Modifier.width(12.dp))
+            Box(
+                modifier = Modifier
+                    .clip(PillShape)
+                    .background(MaterialTheme.colorScheme.background)
+                    .padding(horizontal = 10.dp, vertical = 3.dp),
+            ) {
+                Text(
+                    text = stringResource(R.string.profile_perm_soon),
+                    style = type.meta,
                     color = tinto.muted,
                 )
             }
