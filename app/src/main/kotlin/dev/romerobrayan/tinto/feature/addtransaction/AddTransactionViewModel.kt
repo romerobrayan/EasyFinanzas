@@ -81,6 +81,8 @@ class AddTransactionViewModel @Inject constructor(
         val type: TransactionType = TransactionType.EXPENSE,
         val method: PaymentMethod = PaymentMethod.CASH,
         val last4: String = "",
+        /** Registered card picked from the pills; null when last4 was typed. */
+        val cardId: String? = null,
         val categoryId: String? = null,
         /** null = today (kept relative so the default follows the clock). */
         val date: LocalDate? = null,
@@ -122,6 +124,7 @@ class AddTransactionViewModel @Inject constructor(
             type = currentForm.type,
             method = currentForm.method,
             last4 = currentForm.last4,
+            cardId = currentForm.cardId,
             categoryId = currentForm.categoryId,
             date = date,
             isDateToday = date == today,
@@ -157,22 +160,35 @@ class AddTransactionViewModel @Inject constructor(
         current.copy(
             type = type,
             method = method,
+            cardId = if (method == PaymentMethod.CARD) current.cardId else null,
             categoryId = if (categoryStillValid) current.categoryId else null,
         )
     }
 
-    fun onMethodChanged(method: PaymentMethod) = form.update { it.copy(method = method) }
-
-    fun onLast4Changed(value: String) {
-        form.update { it.copy(last4 = value.filter(Char::isDigit).take(4)) }
+    /** Leaving CARD drops the picked card so no stale id survives the switch. */
+    fun onMethodChanged(method: PaymentMethod) = form.update {
+        it.copy(
+            method = method,
+            cardId = if (method == PaymentMethod.CARD) it.cardId else null,
+        )
     }
 
     /**
-     * Income card pick: choose a registered card without typing digits — the
-     * card's last4 comes along so submit's card-match still resolves it.
+     * Manual last4 entry. Typing means "not one of the pills", so the picked
+     * card is released — otherwise an edited field would keep claiming a card
+     * whose digits no longer match.
+     */
+    fun onLast4Changed(value: String) {
+        form.update { it.copy(last4 = value.filter(Char::isDigit).take(4), cardId = null) }
+    }
+
+    /**
+     * Card pick from the pills (both expense and income): the id is what the
+     * selection and the submit-time match key on; last4 tags along so the
+     * manual field mirrors the choice and captures still resolve by digits.
      */
     fun onCardSelected(card: Card) = form.update {
-        it.copy(method = PaymentMethod.CARD, last4 = card.last4)
+        it.copy(method = PaymentMethod.CARD, cardId = card.id, last4 = card.last4)
     }
 
     fun onCategorySelected(categoryId: String) = form.update { it.copy(categoryId = categoryId) }
@@ -201,7 +217,11 @@ class AddTransactionViewModel @Inject constructor(
             val today = Clock.System.todayIn(timeZone)
             val date = currentForm.date ?: today
             val matchedCard = if (currentForm.method == PaymentMethod.CARD) {
-                cardRepository.observeCards().first().firstOrNull { it.last4 == currentForm.last4 }
+                CardResolver.resolve(
+                    cards = cardRepository.observeCards().first(),
+                    cardId = currentForm.cardId,
+                    last4 = currentForm.last4,
+                )
             } else {
                 null
             }
@@ -334,10 +354,14 @@ class AddTransactionViewModel @Inject constructor(
         val pending = pendingRepository.observePending().first()
             .firstOrNull { it.id == id } ?: return
         originalPending = pending
-        val cards = cardRepository.observeCards().first()
-        val matchedLast4 = pending.cardId
-            ?.let { cardId -> cards.firstOrNull { it.id == cardId }?.last4 }
-            ?: pending.last4
+        // Resolve the capture to a registered card so the right pill starts
+        // selected; a capture whose digits match no card keeps the raw last4.
+        val matchedCard = CardResolver.resolve(
+            cards = cardRepository.observeCards().first(),
+            cardId = pending.cardId,
+            last4 = pending.last4,
+        )
+        val matchedLast4 = matchedCard?.last4 ?: pending.last4
         form.update {
             it.copy(
                 amountDigits = (pending.amount.cents / CENTS_PER_PESO).toString(),
@@ -350,6 +374,7 @@ class AddTransactionViewModel @Inject constructor(
                     PaymentMethod.CARD
                 },
                 last4 = matchedLast4.orEmpty(),
+                cardId = matchedCard?.id,
                 date = pending.occurredAt.toLocalDateTime(timeZone).date,
                 merchant = pending.merchant.orEmpty(),
             )
@@ -361,14 +386,14 @@ class AddTransactionViewModel @Inject constructor(
             .firstOrNull { it.id == transactionId } ?: return
         original = transaction
         val cards = cardRepository.observeCards().first()
+        val editedCard = transaction.cardId?.let { cardId -> cards.firstOrNull { it.id == cardId } }
         form.update {
             it.copy(
                 amountDigits = (transaction.amount.cents / CENTS_PER_PESO).toString(),
                 type = transaction.type,
                 method = transaction.method,
-                last4 = transaction.cardId
-                    ?.let { cardId -> cards.firstOrNull { card -> card.id == cardId }?.last4 }
-                    .orEmpty(),
+                last4 = editedCard?.last4.orEmpty(),
+                cardId = editedCard?.id,
                 categoryId = transaction.categoryId,
                 date = transaction.occurredAt.toLocalDateTime(timeZone).date,
                 merchant = transaction.merchant.orEmpty(),
