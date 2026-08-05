@@ -26,6 +26,13 @@ import kotlinx.coroutines.flow.onEach
  * Categories routed by session. A fresh account is seeded once with the
  * system category set (fixed ids, so re-seeding is idempotent); until the
  * seed lands the same set is served locally so pickers are never empty.
+ *
+ * A local profile gets that same set straight from [MockData] with no table
+ * behind it: categories are fixed app data today — [CategoryRepository] has no
+ * write methods — so persisting a copy per device would only be a second place
+ * to keep in sync.
+ * TODO(sprint-N): give local mode a `categories` table when users can create
+ *  their own; the seed/backfill below is the shape to mirror.
  */
 @OptIn(ExperimentalCoroutinesApi::class)
 @Singleton
@@ -42,7 +49,7 @@ class SyncedCategoryRepository @Inject constructor(
         auth.session.flatMapLatest { session ->
             when (session) {
                 is UserSession.SignedIn -> cloudCategories(session.user.uid)
-                UserSession.Demo -> demo.observeCategories()
+                is UserSession.Local, UserSession.Demo -> demo.observeCategories()
                 else -> flowOf(emptyList())
             }
         }

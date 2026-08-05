@@ -17,7 +17,8 @@ import dev.romerobrayan.tinto.feature.login.LoginScreen
 /**
  * Root of the UI: routes on the auth session. Loading shows the wordmark for
  * the instant Firebase restores the persisted user; SignedOut gates on login;
- * Demo and SignedIn get the full app shell.
+ * Demo, Local and SignedIn get the full app shell — the shell is identical in
+ * all three, only the repositories underneath route elsewhere.
  *
  * @param openRemindersOnLaunch true when a reminder notification launched the
  * activity — the shell lands on the Recordatorios tab.
@@ -37,7 +38,7 @@ fun TintoRoot(
         when (session) {
             UserSession.Loading -> SplashContent()
             UserSession.SignedOut -> LoginScreen()
-            UserSession.Demo, is UserSession.SignedIn -> TintoApp(
+            UserSession.Demo, is UserSession.Local, is UserSession.SignedIn -> TintoApp(
                 onScreenView = viewModel::onScreenView,
                 openRemindersOnLaunch = openRemindersOnLaunch,
             )

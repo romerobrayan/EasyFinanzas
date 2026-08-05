@@ -7,6 +7,7 @@ import dagger.hilt.android.lifecycle.HiltViewModel
 import dev.romerobrayan.tinto.core.common.MockData
 import dev.romerobrayan.tinto.core.common.TintoAnalytics
 import dev.romerobrayan.tinto.core.data.export.DataExporter
+import dev.romerobrayan.tinto.core.data.export.DataImporter
 import dev.romerobrayan.tinto.core.domain.model.Card
 import dev.romerobrayan.tinto.core.domain.model.UserSession
 import dev.romerobrayan.tinto.core.domain.repository.AuthRepository
@@ -34,6 +35,7 @@ class ProfileViewModel @Inject constructor(
     private val smsCapture: SmsCapture,
     private val notificationCapture: NotificationCapture,
     private val dataExporter: DataExporter,
+    private val dataImporter: DataImporter,
 ) : ViewModel() {
 
     private data class CardForm(
@@ -87,6 +89,21 @@ class ProfileViewModel @Inject constructor(
                 cardForm = formUi,
             )
 
+            // No account: the nickname is the whole identity, and there is no
+            // email line to show — the screen renders the local subtitle
+            // instead (strings stay out of the view model).
+            is UserSession.Local -> ProfileUiState(
+                userName = session.displayName,
+                userEmail = "",
+                cards = cards,
+                isDemo = false,
+                isLocal = true,
+                smsCaptureEnabled = capture.smsEnabled,
+                notificationCaptureEnabled = capture.notificationsEnabled,
+                notificationAccessGranted = capture.notificationAccessGranted,
+                cardForm = formUi,
+            )
+
             // Demo persona; also what Loading/SignedOut briefly render on the
             // way out of this screen.
             else -> ProfileUiState(
@@ -102,17 +119,33 @@ class ProfileViewModel @Inject constructor(
         }
     }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), ProfileUiState())
 
-    private val _exportResult = MutableSharedFlow<ExportResult>(extraBufferCapacity = 1)
+    private val _exportResult = MutableSharedFlow<ExportOutcome>(extraBufferCapacity = 1)
 
-    /** Emits once after each export attempt so the screen can toast the outcome. */
-    val exportResult: SharedFlow<ExportResult> = _exportResult.asSharedFlow()
+    /** Emits once after each export attempt so the screen can toast the outcome (+ offer to share). */
+    val exportResult: SharedFlow<ExportOutcome> = _exportResult.asSharedFlow()
 
     /** The user picked a destination via the SAF file picker — write the export there. */
     fun onExportUriSelected(uri: Uri) {
         viewModelScope.launch {
             val result = dataExporter.exportTo(uri)
             if (result.isSuccess) analytics.logExportData()
-            _exportResult.emit(if (result.isSuccess) ExportResult.SUCCESS else ExportResult.FAILURE)
+            _exportResult.emit(if (result.isSuccess) ExportOutcome.Success(uri) else ExportOutcome.Failure)
+        }
+    }
+
+    private val _importResult = MutableSharedFlow<ImportOutcome>(extraBufferCapacity = 1)
+
+    /** Emits once after each import attempt so the screen can toast the outcome. */
+    val importResult: SharedFlow<ImportOutcome> = _importResult.asSharedFlow()
+
+    /** The user picked a previously exported file via the SAF file picker — restore it. */
+    fun onImportUriSelected(uri: Uri) {
+        viewModelScope.launch {
+            val result = dataImporter.importFrom(uri)
+            result.onSuccess { analytics.logImportData() }
+            _importResult.emit(
+                result.fold(onSuccess = ImportOutcome::Success, onFailure = { ImportOutcome.Failure }),
+            )
         }
     }
 

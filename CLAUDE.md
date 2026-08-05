@@ -18,6 +18,17 @@ Operating manual for Claude Code on this repository. Read `PROJECT_CONTEXT.md`, 
 - `app/google-services.json` in the repo may be the placeholder; real console setup steps live in `FIREBASE_SETUP.md`. `app/debug.keystore` is committed on purpose (shared debug signature for local + CI so the registered SHA-1 stays valid).
 - Firestore security rules: `firestore.rules` (per-user isolation).
 
+## Cuenta local — "Continuar sin cuenta" (done)
+
+A fourth session state, `UserSession.Local(displayName)`, between demo and signed-in. Everything below is the whole feature; features, coordinators and the capture pipeline needed no changes.
+
+- **The identity is a nickname.** The gate offers "Continuar sin cuenta" → one text field (`LoginViewModel`, capped at 24 chars, trimmed). `core/data/auth/LocalProfileStore` (SharedPreferences `local_profile`) keeps `display_name` + `active`; the `active` flag is what makes the session survive a process restart instead of being a long demo. `signOut()` clears `active` only — nickname and data stay, and the gate prefills the name so coming back is one tap.
+- **The data is Room, on the device.** `TintoDatabase` v3 adds `transactions` / `cards` / `reminders` / `recurring_rules` (`LedgerEntities.kt` + `LedgerDaos.kt`) alongside `pending_transactions`, with `Local*Repository` implementations. Each `Synced*Repository` routes `UserSession.Local` to them exactly as it routes `Demo` to `InMemory*`.
+- **Migrations are real from v3 on.** These rows exist nowhere else, so `MIGRATION_2_3` creates the tables by hand and the destructive fallback is narrowed to `fallbackToDestructiveMigrationFrom(1, 2)` — the versions that only held re-derivable capture staging. Schemas are exported to `app/schemas/`; diff any new migration's SQL against the generated JSON (it must match character for character).
+- **Categories are not persisted locally.** They're fixed app data with no write API, so local mode serves `MockData.categories` like demo does; `TODO(sprint-N)` in `SyncedCategoryRepository` marks where a table goes if users ever create their own.
+- **Nothing reaches Google.** No Firestore listener is attached, no uid is set, and `TintoAnalytics.setCollectionEnabled(false)` turns Analytics + Crashlytics off for the whole session — applied in `FirebaseAuthRepository`'s `init` and again before the session flips, so a relaunch has no collecting window. Entering local mode is deliberately **not** logged as an event; don't "fix" the missing one.
+- **Export/import is the sync story.** Perfil's Datos rows re-word themselves for a local profile (export = "la forma de llevar tus datos a otro dispositivo"). Signing in with Google later leaves the device data untouched but invisible — export first to carry it over. Known gap: the export still doesn't carry recurring rules (`TODO(sprint-N)` in `ExportDto.kt`).
+
 ## Current sprint — Sprint 5: 2 categorías nuevas + automatización (done)
 
 Brief in the task prompt. Delivered in four phases (A→D):

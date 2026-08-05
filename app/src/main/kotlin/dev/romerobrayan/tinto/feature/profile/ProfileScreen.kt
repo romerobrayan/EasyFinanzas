@@ -26,6 +26,7 @@ import androidx.compose.material.icons.automirrored.outlined.Logout
 import androidx.compose.material.icons.outlined.Autorenew
 import androidx.compose.material.icons.outlined.CreditCard
 import androidx.compose.material.icons.outlined.FileDownload
+import androidx.compose.material.icons.outlined.FileUpload
 import androidx.compose.material.icons.outlined.NotificationsNone
 import androidx.compose.material.icons.outlined.Sms
 import androidx.compose.material.icons.rounded.Add
@@ -44,6 +45,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalResources
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
@@ -71,6 +73,10 @@ fun ProfileScreen(
 ) {
     val state by viewModel.uiState.collectAsStateWithLifecycle()
     val context = LocalContext.current
+    // Toast/share text is looked up through LocalResources, not the context:
+    // resource queries via LocalContext.current don't refresh on configuration
+    // changes (the same Compose lint the login screen documents).
+    val resources = LocalResources.current
     var showCaptureExplainer by rememberSaveable { mutableStateOf(false) }
     var showCaptureDisableConfirm by rememberSaveable { mutableStateOf(false) }
     var showNotificationExplainer by rememberSaveable { mutableStateOf(false) }
@@ -108,14 +114,61 @@ fun ProfileScreen(
         ActivityResultContracts.CreateDocument("application/json"),
     ) { uri -> uri?.let(viewModel::onExportUriSelected) }
 
+    // Same platform-call exception, in reverse: picking the file to restore.
+    val importLauncher = rememberLauncherForActivityResult(
+        ActivityResultContracts.OpenDocument(),
+    ) { uri -> uri?.let(viewModel::onImportUriSelected) }
+
     LaunchedEffect(viewModel) {
-        viewModel.exportResult.collect { result ->
-            val messageRes = if (result == ExportResult.SUCCESS) {
-                R.string.profile_export_success
-            } else {
-                R.string.profile_export_error
+        viewModel.exportResult.collect { outcome ->
+            when (outcome) {
+                is ExportOutcome.Success -> {
+                    Toast.makeText(
+                        context,
+                        resources.getString(R.string.profile_export_success),
+                        Toast.LENGTH_SHORT,
+                    ).show()
+                    val shareIntent = Intent(Intent.ACTION_SEND).apply {
+                        type = "application/json"
+                        putExtra(Intent.EXTRA_STREAM, outcome.uri)
+                        addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
+                    }
+                    context.startActivity(
+                        Intent.createChooser(
+                            shareIntent,
+                            resources.getString(R.string.profile_export_share_title),
+                        ),
+                    )
+                }
+
+                ExportOutcome.Failure -> {
+                    Toast.makeText(
+                        context,
+                        resources.getString(R.string.profile_export_error),
+                        Toast.LENGTH_SHORT,
+                    ).show()
+                }
             }
-            Toast.makeText(context, context.getString(messageRes), Toast.LENGTH_SHORT).show()
+        }
+    }
+
+    LaunchedEffect(viewModel) {
+        viewModel.importResult.collect { outcome ->
+            val message = when (outcome) {
+                is ImportOutcome.Success -> if (outcome.summary.totalAdded == 0) {
+                    resources.getString(R.string.profile_import_success_empty)
+                } else {
+                    resources.getString(
+                        R.string.profile_import_success_added,
+                        outcome.summary.cardsAdded,
+                        outcome.summary.transactionsAdded,
+                        outcome.summary.remindersAdded,
+                    )
+                }
+
+                ImportOutcome.Failure -> resources.getString(R.string.profile_import_error)
+            }
+            Toast.makeText(context, message, Toast.LENGTH_LONG).show()
         }
     }
 
@@ -129,6 +182,7 @@ fun ProfileScreen(
             val today = Clock.System.todayIn(TimeZone.currentSystemDefault())
             exportLauncher.launch("tinto-export-$today.json")
         },
+        onImportClick = { importLauncher.launch(arrayOf("application/json")) },
         onSmsCaptureClick = {
             if (state.smsCaptureEnabled) {
                 showCaptureDisableConfirm = true
@@ -232,6 +286,7 @@ private fun ProfileContent(
     onCardClick: (Card) -> Unit,
     onManageRecurring: () -> Unit,
     onExportClick: () -> Unit,
+    onImportClick: () -> Unit,
     onSmsCaptureClick: () -> Unit,
     onNotificationCaptureClick: () -> Unit,
     modifier: Modifier = Modifier,
@@ -276,12 +331,18 @@ private fun ProfileContent(
                 )
                 Spacer(Modifier.height(2.dp))
                 Text(
-                    text = state.userEmail,
+                    // A local profile has no email — say where the data lives
+                    // instead, which is the thing that makes it different.
+                    text = if (state.isLocal) {
+                        stringResource(R.string.profile_local_subtitle)
+                    } else {
+                        state.userEmail
+                    },
                     style = type.caption,
                     color = tinto.muted,
                 )
             }
-            if (state.isDemo) {
+            if (state.isDemo || state.isLocal) {
                 Spacer(Modifier.width(12.dp))
                 Box(
                     modifier = Modifier
@@ -290,7 +351,13 @@ private fun ProfileContent(
                         .padding(horizontal = 10.dp, vertical = 3.dp),
                 ) {
                     Text(
-                        text = stringResource(R.string.profile_demo_badge),
+                        text = stringResource(
+                            if (state.isDemo) {
+                                R.string.profile_demo_badge
+                            } else {
+                                R.string.profile_local_badge
+                            },
+                        ),
                         style = type.meta,
                         color = tinto.gold,
                     )
@@ -458,7 +525,53 @@ private fun ProfileContent(
                 )
                 Spacer(Modifier.height(2.dp))
                 Text(
-                    text = stringResource(R.string.profile_export_hint),
+                    // For a local profile this is not a backup nicety — it is
+                    // the only way the data reaches another device.
+                    text = stringResource(
+                        if (state.isLocal) {
+                            R.string.profile_export_hint_local
+                        } else {
+                            R.string.profile_export_hint
+                        },
+                    ),
+                    style = type.caption,
+                    color = tinto.muted,
+                )
+            }
+        }
+
+        Spacer(Modifier.height(10.dp))
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .clip(ButtonShape)
+                .background(MaterialTheme.colorScheme.surfaceVariant)
+                .clickable(onClick = onImportClick)
+                .padding(14.dp),
+            verticalAlignment = Alignment.CenterVertically,
+        ) {
+            Icon(
+                imageVector = Icons.Outlined.FileUpload,
+                contentDescription = null,
+                tint = tinto.gold,
+                modifier = Modifier.size(22.dp),
+            )
+            Spacer(Modifier.width(12.dp))
+            Column(Modifier.weight(1f)) {
+                Text(
+                    text = stringResource(R.string.profile_import),
+                    style = type.body.copy(fontWeight = FontWeight.Medium),
+                    color = MaterialTheme.colorScheme.onBackground,
+                )
+                Spacer(Modifier.height(2.dp))
+                Text(
+                    text = stringResource(
+                        if (state.isLocal) {
+                            R.string.profile_import_hint_local
+                        } else {
+                            R.string.profile_import_hint
+                        },
+                    ),
                     style = type.caption,
                     color = tinto.muted,
                 )
@@ -527,7 +640,11 @@ private fun ProfileContent(
             Column {
                 Text(
                     text = stringResource(
-                        if (state.isDemo) R.string.profile_exit_demo else R.string.profile_sign_out,
+                        when {
+                            state.isDemo -> R.string.profile_exit_demo
+                            state.isLocal -> R.string.profile_exit_local
+                            else -> R.string.profile_sign_out
+                        },
                     ),
                     style = type.body.copy(fontWeight = FontWeight.Medium),
                     color = MaterialTheme.colorScheme.onBackground,
@@ -535,7 +652,15 @@ private fun ProfileContent(
                 if (!state.isDemo) {
                     Spacer(Modifier.height(2.dp))
                     Text(
-                        text = stringResource(R.string.profile_sign_out_hint),
+                        // Leaving a local profile is not deleting it: say so,
+                        // or the row reads like it wipes the device data.
+                        text = stringResource(
+                            if (state.isLocal) {
+                                R.string.profile_sign_out_hint_local
+                            } else {
+                                R.string.profile_sign_out_hint
+                            },
+                        ),
                         style = type.caption,
                         color = tinto.muted,
                     )

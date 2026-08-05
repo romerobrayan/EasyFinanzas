@@ -371,6 +371,7 @@ private class FakePendingTransactionRepository : PendingTransactionRepository {
 
 private class NoOpAnalytics : TintoAnalytics {
     override fun setUser(userId: String?) = Unit
+    override fun setCollectionEnabled(enabled: Boolean) = Unit
     override fun logScreenView(screenName: String) = Unit
     override fun logLogin(method: String) = Unit
     override fun logDemoMode() = Unit
@@ -390,5 +391,6 @@ private class NoOpAnalytics : TintoAnalytics {
     override fun logPendingDiscarded(count: Int) = Unit
     override fun logPendingDuplicateShown() = Unit
     override fun logExportData() = Unit
+    override fun logImportData() = Unit
     override fun recordError(error: Throwable) = Unit
 }

@@ -6,7 +6,7 @@
 - UI: Jetpack Compose, Material 3 (`androidx.compose.material3`).
 - Architecture: Clean Architecture + MVVM.
 - DI: Hilt.
-- Persistence: Cloud Firestore, one subtree per account (`users/{uid}/…`), with the SDK's offline cache so the app works without connectivity. Auth: Firebase Auth (Google, via Credential Manager). The Room staging layer landed in Sprint 3: a device-local `pending_transactions` table (the only Room table — the committed ledger stays in Firestore) holding captured parses until the user confirms or discards them.
+- Persistence: routed by session. A signed-in account lives in Cloud Firestore, one subtree per account (`users/{uid}/…`), with the SDK's offline cache so the app works without connectivity. A **no-account (local) profile** keeps its whole ledger in Room on the device and never touches the network — see "Sessions and persistence" below. Auth: Firebase Auth (Google, via Credential Manager) or a nickname stored in SharedPreferences for local profiles. The Room staging layer landed in Sprint 3: a device-local `pending_transactions` table holding captured parses until the user confirms or discards them.
 - Backend services: Firebase Analytics + Crashlytics behind the `TintoAnalytics` interface in `core/common`.
 - Navigation: Navigation Compose (type-safe routes).
 - Charts: Compose-native custom chart (draw with `Canvas` / `drawScope`) — do **not** pull a heavy third-party chart lib for a simple bar chart; the design demands custom styling anyway. Vico is an acceptable fallback only if the custom implementation becomes a time sink.
@@ -46,7 +46,20 @@ dev.romerobrayan.tinto
 
 - **presentation** (`feature/*`): Compose screens are stateless and driven by a `UiState` exposed as `StateFlow` from a `@HiltViewModel`. Screens emit events up; ViewModels call use cases (or repositories directly for trivial reads). Never reference persistence types in this layer. One deliberate exception to "no platform calls in composables": the Credential Manager account picker (`feature/login/GoogleCredential.kt`) needs the Activity context, so the login screen fetches the Google ID token and hands it to the ViewModel.
 - **domain** (`core/domain`): pure Kotlin, no Android/Firebase/Compose imports. Holds the domain model, repository interfaces (including `AuthRepository` + `UserSession`), and use cases. Money math lives here.
-- **data** (`core/data`): Firestore-backed `Synced*Repository` implementations route by session — signed-in traffic goes to `users/{uid}/…` documents, demo mode reuses the `InMemory*` sample repositories. Manual mappers (`core/data/firebase/FirestoreMappers.kt`) convert documents to domain models at the repository boundary so domain never leaks persistence details; their field names are a persisted schema.
+- **data** (`core/data`): the `Synced*Repository` implementations route by session — signed-in traffic goes to `users/{uid}/…` documents, a local profile to the `Local*Repository` classes over Room, demo mode to the `InMemory*` sample repositories. Manual mappers (`core/data/firebase/FirestoreMappers.kt`, `core/data/local/LedgerEntities.kt`) convert documents/rows to domain models at the repository boundary so domain never leaks persistence details; their field and column names are a persisted schema.
+
+## Sessions and persistence
+
+`UserSession` has four states and every repository routes on it, which is why a feature never knows where its data lives:
+
+| Session | Ledger | Survives restart | Leaves the device |
+|---|---|---|---|
+| `SignedIn` | Firestore `users/{uid}/…` | yes | yes (that's the point) |
+| `Local` | Room on this device | yes | only via JSON export/import |
+| `Demo` | `InMemory*` sample data | no | no |
+| `SignedOut` / `Loading` | empty flows | — | — |
+
+A `Local` profile is identified by a nickname in SharedPreferences (`core/data/auth/LocalProfileStore`) — no uid, no Firestore listener, and analytics + crash collection are switched off for the whole session via `TintoAnalytics.setCollectionEnabled(false)`. Moving that data to another device is deliberately export → import; there is no sync path, and adding one would mean adding an account.
 
 Use cases are warranted where logic is non-trivial (aggregating spend into chart buckets, detecting recurrence, deduping captured transactions). Trivial CRUD may go straight ViewModel → repository.
 
@@ -103,13 +116,17 @@ enum class Period { DAY, WEEK, MONTH, YEAR }
 
 ## Room schema
 
-Entities mirror the domain but store primitives. Money → `INTEGER` (Long cents). Instants → `INTEGER` epoch millis via `TypeConverter`. Enums → `TEXT` via converter.
+Entities mirror the domain but store primitives, mapped by hand at the repository boundary (no `TypeConverter`s): Money → `INTEGER` (Long cents), Instants → `INTEGER` epoch millis, `LocalDate`/`LocalTime` → ISO `TEXT`, enums → their name as `TEXT`.
 
-- `transactions` — one row per movement. Indexed on `occurredAt` (chart/statement queries are date-ranged) and on `categoryId`.
+- `transactions` — one row per movement of a **local profile**. Indexed on `occurredAtEpochMs` (chart/statement queries are date-ranged) and on `categoryId`.
 - `cards` — registered cards (`id`, `bank`, `last4`, `label`).
-- `categories` — seeded on first run; user-extensible.
-- `reminders` — `id`, `title`, `amount?`, `dueDate`, `recurrence` (NONE / MONTHLY / …), `isPaid`.
-- `pending_transactions` — **capture staging** (Sprint 3). Captured items land here first for user review; on confirm they are promoted to `transactions`. Never auto-commit a parsed notification straight to the ledger — a bad parse would silently corrupt the user's data.
+- `reminders` — `id`, `title`, `amountCents?`, `dueDate`, `dueTime?`, `recurrence` (NONE / MONTHLY / …), `isPaid`.
+- `recurring_rules` — automations of a local profile, including `nextOccurrence` so the catch-up generator is idempotent.
+- `pending_transactions` — **capture staging** (Sprint 3), for every session. Captured items land here first for user review; on confirm they are promoted to the ledger. Never auto-commit a parsed notification straight to the ledger — a bad parse would silently corrupt the user's data.
+
+Categories have no table: the system set is fixed app data with no write API, so it is served from `MockData` (and seeded into Firestore for signed-in accounts).
+
+Schema versions: 1–2 held only `pending_transactions`, so `DatabaseModule` may still recreate those destructively. Version 3 introduced the local ledger — rows with no copy anywhere — so from there on **every change needs a real `Migration`**; schemas are exported to `app/schemas/` to diff against.
 
 DAOs expose `Flow<List<…>>` for observed reads. The dashboard queries aggregate spend grouped by a date bucket derived from the selected `Period`; do the bucketing in a use case over a date-ranged query rather than in SQL date functions, so the logic stays testable and locale-safe.
 

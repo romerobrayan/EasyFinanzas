@@ -20,13 +20,15 @@ import kotlinx.coroutines.flow.map
 
 /**
  * The user's ledger, routed by session: signed-in reads/writes
- * `users/{uid}/transactions` in Cloud Firestore (offline cache included),
- * demo mode falls back to the in-memory sample ledger.
+ * `users/{uid}/transactions` in Cloud Firestore (offline cache included), a
+ * local profile reads/writes this device's Room database, demo mode falls back
+ * to the in-memory sample ledger.
  */
 @OptIn(ExperimentalCoroutinesApi::class)
 @Singleton
 class SyncedTransactionRepository @Inject constructor(
     private val auth: AuthRepository,
+    private val local: LocalTransactionRepository,
     private val demo: InMemoryTransactionRepository,
     private val analytics: TintoAnalytics,
 ) : TransactionRepository {
@@ -40,6 +42,7 @@ class SyncedTransactionRepository @Inject constructor(
                         .listenAsList(analytics)
                         .map { docs -> docs.mapNotNull { it.toTransaction() } }
 
+                is UserSession.Local -> local.observeTransactions()
                 UserSession.Demo -> demo.observeTransactions()
                 else -> flowOf(emptyList())
             }
@@ -55,6 +58,7 @@ class SyncedTransactionRepository @Inject constructor(
                     .document(transaction.id)
                     .set(transaction.toFirestoreMap())
 
+            is UserSession.Local -> local.addTransaction(transaction)
             UserSession.Demo -> demo.addTransaction(transaction)
             else -> Unit
         }
@@ -69,6 +73,7 @@ class SyncedTransactionRepository @Inject constructor(
                     .document(transaction.id)
                     .set(transaction.toFirestoreMap())
 
+            is UserSession.Local -> local.updateTransaction(transaction)
             UserSession.Demo -> demo.updateTransaction(transaction)
             else -> Unit
         }
@@ -81,6 +86,7 @@ class SyncedTransactionRepository @Inject constructor(
                     .document(transactionId)
                     .delete()
 
+            is UserSession.Local -> local.deleteTransaction(transactionId)
             UserSession.Demo -> demo.deleteTransaction(transactionId)
             else -> Unit
         }

@@ -79,6 +79,14 @@ android {
     }
 }
 
+// Room schema JSON, committed under app/schemas. Since version 3 this database
+// holds the device-local ledger of no-account users — data with no copy
+// anywhere — so migrations are hand-written and the exported schema is what
+// they get diffed against.
+ksp {
+    arg("room.schemaLocation", "$projectDir/schemas")
+}
+
 dependencies {
     implementation(platform(libs.compose.bom))
     implementation(libs.androidx.core.ktx)

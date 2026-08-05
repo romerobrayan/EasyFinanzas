@@ -19,13 +19,15 @@ import kotlinx.coroutines.flow.map
 
 /**
  * Payment reminders routed by session: signed-in reads/writes
- * `users/{uid}/reminders`, demo mode uses the in-memory samples. Writes are
+ * `users/{uid}/reminders`, a local profile reads/writes this device's Room
+ * database, demo mode uses the in-memory samples. Cloud writes are
  * fire-and-forget so reminders keep working offline.
  */
 @OptIn(ExperimentalCoroutinesApi::class)
 @Singleton
 class SyncedReminderRepository @Inject constructor(
     private val auth: AuthRepository,
+    private val local: LocalReminderRepository,
     private val demo: InMemoryReminderRepository,
     private val analytics: TintoAnalytics,
 ) : ReminderRepository {
@@ -39,6 +41,7 @@ class SyncedReminderRepository @Inject constructor(
                         .listenAsList(analytics)
                         .map { docs -> docs.mapNotNull { it.toReminder() } }
 
+                is UserSession.Local -> local.observeReminders()
                 UserSession.Demo -> demo.observeReminders()
                 else -> flowOf(emptyList())
             }
@@ -51,6 +54,7 @@ class SyncedReminderRepository @Inject constructor(
                     .document(reminder.id)
                     .set(reminder.toFirestoreMap())
 
+            is UserSession.Local -> local.addReminder(reminder)
             UserSession.Demo -> demo.addReminder(reminder)
             else -> Unit
         }
@@ -63,6 +67,7 @@ class SyncedReminderRepository @Inject constructor(
                     .document(reminder.id)
                     .set(reminder.toFirestoreMap())
 
+            is UserSession.Local -> local.updateReminder(reminder)
             UserSession.Demo -> demo.updateReminder(reminder)
             else -> Unit
         }
@@ -75,6 +80,7 @@ class SyncedReminderRepository @Inject constructor(
                     .document(reminderId)
                     .delete()
 
+            is UserSession.Local -> local.deleteReminder(reminderId)
             UserSession.Demo -> demo.deleteReminder(reminderId)
             else -> Unit
         }

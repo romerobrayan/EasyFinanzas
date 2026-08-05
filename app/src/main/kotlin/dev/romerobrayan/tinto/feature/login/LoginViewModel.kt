@@ -6,6 +6,7 @@ import androidx.lifecycle.viewModelScope
 import dagger.hilt.android.lifecycle.HiltViewModel
 import dev.romerobrayan.tinto.R
 import dev.romerobrayan.tinto.core.common.TintoAnalytics
+import dev.romerobrayan.tinto.core.domain.model.UserSession
 import dev.romerobrayan.tinto.core.domain.repository.AuthRepository
 import javax.inject.Inject
 import kotlinx.coroutines.CancellationException
@@ -60,7 +61,17 @@ class LoginViewModel @Inject constructor(
      * The error is kept so it survives configuration changes.
      */
     fun onScreenLeft() {
-        _uiState.update { it.copy(isSigningIn = false) }
+        // Still signed out means the screen is only being recomposed (a
+        // configuration change) — keep what the user was typing. Anything else
+        // means the gate was passed, so the nickname prompt must not be
+        // waiting when they come back after a sign-out.
+        val stillAtTheGate = authRepository.session.value == UserSession.SignedOut
+        _uiState.update { state ->
+            state.copy(
+                isSigningIn = false,
+                localNameDraft = state.localNameDraft.takeIf { stillAtTheGate },
+            )
+        }
     }
 
     fun onSignInFailed(@StringRes messageRes: Int) {
@@ -70,5 +81,37 @@ class LoginViewModel @Inject constructor(
     fun onDemoClick() {
         analytics.logDemoMode()
         authRepository.enterDemoMode()
+    }
+
+    /** Opens the nickname prompt, prefilled with the last local profile if any. */
+    fun onContinueWithoutAccountClick() {
+        _uiState.value = LoginUiState(
+            localNameDraft = authRepository.localProfileName.value.orEmpty(),
+        )
+    }
+
+    fun onLocalNameChanged(value: String) {
+        // A nickname, not a legal name: cap it where the profile header still
+        // reads well, and keep newlines out of a single-line field.
+        _uiState.update { it.copy(localNameDraft = value.replace("\n", "").take(MAX_LOCAL_NAME_LENGTH)) }
+    }
+
+    fun onLocalNameDismissed() {
+        _uiState.update { it.copy(localNameDraft = null) }
+    }
+
+    /**
+     * Starts the device-local session. Nothing is logged here on purpose: the
+     * mode promises that no trace of it reaches Google, and the repository
+     * turns collection off before the session flips.
+     */
+    fun onLocalNameConfirmed() {
+        val name = _uiState.value.localNameDraft?.trim().orEmpty()
+        if (name.isEmpty()) return
+        authRepository.continueLocally(name)
+    }
+
+    private companion object {
+        const val MAX_LOCAL_NAME_LENGTH = 24
     }
 }
