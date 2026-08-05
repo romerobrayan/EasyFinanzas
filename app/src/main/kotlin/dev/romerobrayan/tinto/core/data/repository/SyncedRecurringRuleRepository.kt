@@ -19,7 +19,8 @@ import kotlinx.coroutines.flow.map
 
 /**
  * Automation rules routed by session: signed-in reads/writes
- * `users/{uid}/recurring_rules`, demo mode uses the in-memory list. Writes are
+ * `users/{uid}/recurring_rules`, a local profile reads/writes this device's
+ * Room database, demo mode uses the in-memory list. Cloud writes are
  * fire-and-forget (offline-friendly), upsert by id. Signed-out → empty, so the
  * generator materializes nothing.
  */
@@ -27,6 +28,7 @@ import kotlinx.coroutines.flow.map
 @Singleton
 class SyncedRecurringRuleRepository @Inject constructor(
     private val auth: AuthRepository,
+    private val local: LocalRecurringRuleRepository,
     private val demo: InMemoryRecurringRuleRepository,
     private val analytics: TintoAnalytics,
 ) : RecurringRuleRepository {
@@ -39,6 +41,7 @@ class SyncedRecurringRuleRepository @Inject constructor(
                         .listenAsList(analytics)
                         .map { docs -> docs.mapNotNull { it.toRecurringRule() } }
 
+                is UserSession.Local -> local.observeRules()
                 UserSession.Demo -> demo.observeRules()
                 else -> flowOf(emptyList())
             }
@@ -51,6 +54,7 @@ class SyncedRecurringRuleRepository @Inject constructor(
                     .document(rule.id)
                     .set(rule.toFirestoreMap())
 
+            is UserSession.Local -> local.upsertRule(rule)
             UserSession.Demo -> demo.upsertRule(rule)
             else -> Unit
         }
@@ -63,6 +67,7 @@ class SyncedRecurringRuleRepository @Inject constructor(
                     .document(ruleId)
                     .delete()
 
+            is UserSession.Local -> local.deleteRule(ruleId)
             UserSession.Demo -> demo.deleteRule(ruleId)
             else -> Unit
         }

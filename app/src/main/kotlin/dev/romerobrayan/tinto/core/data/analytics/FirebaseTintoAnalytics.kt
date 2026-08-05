@@ -20,6 +20,15 @@ class FirebaseTintoAnalytics @Inject constructor() : TintoAnalytics {
         crashlytics.setUserId(userId.orEmpty())
     }
 
+    /**
+     * Both SDKs persist this flag, so a device-local install stays silent
+     * across launches until a session that isn't local turns it back on.
+     */
+    override fun setCollectionEnabled(enabled: Boolean) {
+        analytics.setAnalyticsCollectionEnabled(enabled)
+        crashlytics.setCrashlyticsCollectionEnabled(enabled)
+    }
+
     override fun logScreenView(screenName: String) {
         analytics.logEvent(
             FirebaseAnalytics.Event.SCREEN_VIEW,
@@ -106,6 +115,10 @@ class FirebaseTintoAnalytics @Inject constructor() : TintoAnalytics {
 
     override fun logExportData() {
         analytics.logEvent("export_data", null)
+    }
+
+    override fun logImportData() {
+        analytics.logEvent("import_data", null)
     }
 
     override fun recordError(error: Throwable) {

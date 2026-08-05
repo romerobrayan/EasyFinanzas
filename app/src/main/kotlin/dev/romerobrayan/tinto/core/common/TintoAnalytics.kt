@@ -10,6 +10,14 @@ interface TintoAnalytics {
     /** Ties analytics + crash reports to the signed-in uid; null clears it. */
     fun setUser(userId: String?)
 
+    /**
+     * Master switch for analytics + crash reporting. Off for the whole of a
+     * device-local session: that mode promises nothing leaves the phone, and
+     * a stream of screen views would break that promise even though no event
+     * carries financial data.
+     */
+    fun setCollectionEnabled(enabled: Boolean)
+
     fun logScreenView(screenName: String)
 
     /** [method] e.g. "google". */
@@ -63,6 +71,9 @@ interface TintoAnalytics {
 
     /** The user exported their data as JSON. No file path or content. */
     fun logExportData()
+
+    /** The user imported a previously exported JSON file. No file path or content. */
+    fun logImportData()
 
     /** Non-fatal error worth seeing in Crashlytics (e.g. a sync listener failure). */
     fun recordError(error: Throwable)

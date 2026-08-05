@@ -19,13 +19,15 @@ import kotlinx.coroutines.flow.map
 
 /**
  * Registered cards routed by session: signed-in reads/writes
- * `users/{uid}/cards`, demo mode uses the in-memory samples. Writes are
+ * `users/{uid}/cards`, a local profile reads/writes this device's Room
+ * database, demo mode uses the in-memory samples. Cloud writes are
  * fire-and-forget so card management keeps working offline.
  */
 @OptIn(ExperimentalCoroutinesApi::class)
 @Singleton
 class SyncedCardRepository @Inject constructor(
     private val auth: AuthRepository,
+    private val local: LocalCardRepository,
     private val demo: InMemoryCardRepository,
     private val analytics: TintoAnalytics,
 ) : CardRepository {
@@ -38,6 +40,7 @@ class SyncedCardRepository @Inject constructor(
                         .listenAsList(analytics)
                         .map { docs -> docs.mapNotNull { it.toCard() } }
 
+                is UserSession.Local -> local.observeCards()
                 UserSession.Demo -> demo.observeCards()
                 else -> flowOf(emptyList())
             }
@@ -50,6 +53,7 @@ class SyncedCardRepository @Inject constructor(
                     .document(card.id)
                     .set(card.toFirestoreMap())
 
+            is UserSession.Local -> local.addCard(card)
             UserSession.Demo -> demo.addCard(card)
             else -> Unit
         }
@@ -62,6 +66,7 @@ class SyncedCardRepository @Inject constructor(
                     .document(card.id)
                     .set(card.toFirestoreMap())
 
+            is UserSession.Local -> local.updateCard(card)
             UserSession.Demo -> demo.updateCard(card)
             else -> Unit
         }
@@ -74,6 +79,7 @@ class SyncedCardRepository @Inject constructor(
                     .document(cardId)
                     .delete()
 
+            is UserSession.Local -> local.deleteCard(cardId)
             UserSession.Demo -> demo.deleteCard(cardId)
             else -> Unit
         }

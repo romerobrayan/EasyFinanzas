@@ -79,6 +79,58 @@ class LoginViewModelTest {
     }
 
     @Test
+    fun `the nickname prompt opens prefilled with the last local profile`() {
+        authRepository.localProfileName.value = "Bray"
+
+        viewModel.onContinueWithoutAccountClick()
+
+        assertTrue(viewModel.uiState.value.isNamingLocalProfile)
+        assertEquals("Bray", viewModel.uiState.value.localNameDraft)
+    }
+
+    @Test
+    fun `a blank nickname cannot start a local session`() {
+        viewModel.onContinueWithoutAccountClick()
+        viewModel.onLocalNameChanged("   ")
+
+        assertFalse(viewModel.uiState.value.canConfirmLocalName)
+        viewModel.onLocalNameConfirmed()
+
+        assertEquals(UserSession.SignedOut, authRepository.session.value)
+    }
+
+    @Test
+    fun `confirming trims the nickname and starts the local session`() {
+        viewModel.onContinueWithoutAccountClick()
+        viewModel.onLocalNameChanged("  Brayan  ")
+
+        viewModel.onLocalNameConfirmed()
+
+        assertEquals(UserSession.Local("Brayan"), authRepository.session.value)
+    }
+
+    @Test
+    fun `leaving the gate into a local profile closes the prompt for the next visit`() {
+        viewModel.onContinueWithoutAccountClick()
+        viewModel.onLocalNameChanged("Brayan")
+        viewModel.onLocalNameConfirmed()
+
+        viewModel.onScreenLeft()
+
+        assertFalse(viewModel.uiState.value.isNamingLocalProfile)
+    }
+
+    @Test
+    fun `a configuration change at the gate keeps the half-typed nickname`() {
+        viewModel.onContinueWithoutAccountClick()
+        viewModel.onLocalNameChanged("Bra")
+
+        viewModel.onScreenLeft()
+
+        assertEquals("Bra", viewModel.uiState.value.localNameDraft)
+    }
+
+    @Test
     fun `failed token exchange stops the spinner and surfaces the error`() = runTest(dispatcher) {
         authRepository.signInError = IllegalStateException("credential rejected")
         viewModel.onSignInStarted()
@@ -94,7 +146,11 @@ private class FakeAuthRepository : AuthRepository {
 
     var signInError: Exception? = null
 
-    override val session: StateFlow<UserSession> = MutableStateFlow(UserSession.SignedOut)
+    private val sessionState = MutableStateFlow<UserSession>(UserSession.SignedOut)
+
+    override val session: StateFlow<UserSession> = sessionState
+
+    override val localProfileName = MutableStateFlow<String?>(null)
 
     override suspend fun signInWithGoogle(idToken: String): AuthUser {
         signInError?.let { throw it }
@@ -103,11 +159,17 @@ private class FakeAuthRepository : AuthRepository {
 
     override fun enterDemoMode() = Unit
 
+    override fun continueLocally(displayName: String) {
+        localProfileName.value = displayName
+        sessionState.value = UserSession.Local(displayName)
+    }
+
     override fun signOut() = Unit
 }
 
 private class NoOpAnalytics : TintoAnalytics {
     override fun setUser(userId: String?) = Unit
+    override fun setCollectionEnabled(enabled: Boolean) = Unit
     override fun logScreenView(screenName: String) = Unit
     override fun logLogin(method: String) = Unit
     override fun logDemoMode() = Unit
@@ -127,5 +189,6 @@ private class NoOpAnalytics : TintoAnalytics {
     override fun logPendingDiscarded(count: Int) = Unit
     override fun logPendingDuplicateShown() = Unit
     override fun logExportData() = Unit
+    override fun logImportData() = Unit
     override fun recordError(error: Throwable) = Unit
 }
