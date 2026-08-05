@@ -61,6 +61,9 @@ interface TintoAnalytics {
     /** The inbox surfaced at least one "Posible duplicado" badge. */
     fun logPendingDuplicateShown()
 
+    /** The user exported their data as JSON. No file path or content. */
+    fun logExportData()
+
     /** Non-fatal error worth seeing in Crashlytics (e.g. a sync listener failure). */
     fun recordError(error: Throwable)
 }

@@ -202,10 +202,11 @@
     <string name="profile_data_section">Datos</string>
     <string name="profile_export">Exportar datos</string>
     <string name="profile_export_hint">Exporta tus movimientos en JSON versionado</string>
+    <string name="profile_export_success">Exportación completa</string>
+    <string name="profile_export_error">No se pudo exportar tus datos</string>
     <string name="profile_permissions_section">Captura automática</string>
     <string name="profile_perm_notifications">Notificaciones (Nu)</string>
     <string name="profile_perm_sms">Mensajes SMS</string>
-    <string name="profile_perm_gmail">Correos de Gmail</string>
     <string name="profile_perm_soon">Próximamente</string>
 
     <!-- Captura automática -->

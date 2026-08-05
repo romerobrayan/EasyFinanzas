@@ -389,5 +389,6 @@ private class NoOpAnalytics : TintoAnalytics {
     override fun logPendingConfirmed(count: Int) = Unit
     override fun logPendingDiscarded(count: Int) = Unit
     override fun logPendingDuplicateShown() = Unit
+    override fun logExportData() = Unit
     override fun recordError(error: Throwable) = Unit
 }

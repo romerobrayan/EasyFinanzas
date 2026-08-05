@@ -1,10 +1,12 @@
 package dev.romerobrayan.tinto.feature.profile
 
+import android.net.Uri
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import dagger.hilt.android.lifecycle.HiltViewModel
 import dev.romerobrayan.tinto.core.common.MockData
 import dev.romerobrayan.tinto.core.common.TintoAnalytics
+import dev.romerobrayan.tinto.core.data.export.DataExporter
 import dev.romerobrayan.tinto.core.domain.model.Card
 import dev.romerobrayan.tinto.core.domain.model.UserSession
 import dev.romerobrayan.tinto.core.domain.repository.AuthRepository
@@ -13,9 +15,12 @@ import dev.romerobrayan.tinto.core.domain.repository.NotificationCapture
 import dev.romerobrayan.tinto.core.domain.repository.SmsCapture
 import java.util.UUID
 import javax.inject.Inject
+import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.SharedFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
@@ -28,6 +33,7 @@ class ProfileViewModel @Inject constructor(
     private val cardRepository: CardRepository,
     private val smsCapture: SmsCapture,
     private val notificationCapture: NotificationCapture,
+    private val dataExporter: DataExporter,
 ) : ViewModel() {
 
     private data class CardForm(
@@ -95,6 +101,20 @@ class ProfileViewModel @Inject constructor(
             )
         }
     }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), ProfileUiState())
+
+    private val _exportResult = MutableSharedFlow<ExportResult>(extraBufferCapacity = 1)
+
+    /** Emits once after each export attempt so the screen can toast the outcome. */
+    val exportResult: SharedFlow<ExportResult> = _exportResult.asSharedFlow()
+
+    /** The user picked a destination via the SAF file picker — write the export there. */
+    fun onExportUriSelected(uri: Uri) {
+        viewModelScope.launch {
+            val result = dataExporter.exportTo(uri)
+            if (result.isSuccess) analytics.logExportData()
+            _exportResult.emit(if (result.isSuccess) ExportResult.SUCCESS else ExportResult.FAILURE)
+        }
+    }
 
     /** The UI granted RECEIVE_SMS + READ_SMS — enable capture and backfill. */
     fun onSmsPermissionsGranted() {

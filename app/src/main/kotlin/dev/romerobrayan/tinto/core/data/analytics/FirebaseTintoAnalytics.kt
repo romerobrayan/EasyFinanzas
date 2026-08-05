@@ -104,6 +104,10 @@ class FirebaseTintoAnalytics @Inject constructor() : TintoAnalytics {
         analytics.logEvent("pending_duplicate_shown", null)
     }
 
+    override fun logExportData() {
+        analytics.logEvent("export_data", null)
+    }
+
     override fun recordError(error: Throwable) {
         crashlytics.recordException(error)
     }

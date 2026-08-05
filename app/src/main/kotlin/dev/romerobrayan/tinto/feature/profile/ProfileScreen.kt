@@ -3,6 +3,7 @@ package dev.romerobrayan.tinto.feature.profile
 import android.Manifest
 import android.content.Intent
 import android.provider.Settings
+import android.widget.Toast
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.background
@@ -24,7 +25,6 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.outlined.Logout
 import androidx.compose.material.icons.outlined.Autorenew
 import androidx.compose.material.icons.outlined.CreditCard
-import androidx.compose.material.icons.outlined.Email
 import androidx.compose.material.icons.outlined.FileDownload
 import androidx.compose.material.icons.outlined.NotificationsNone
 import androidx.compose.material.icons.outlined.Sms
@@ -34,6 +34,7 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.saveable.rememberSaveable
@@ -58,6 +59,9 @@ import dev.romerobrayan.tinto.core.designsystem.theme.LocalTintoTypography
 import dev.romerobrayan.tinto.core.designsystem.theme.PillShape
 import dev.romerobrayan.tinto.core.designsystem.theme.TileShape
 import dev.romerobrayan.tinto.core.domain.model.Card
+import kotlinx.datetime.Clock
+import kotlinx.datetime.TimeZone
+import kotlinx.datetime.todayIn
 
 @Composable
 fun ProfileScreen(
@@ -98,12 +102,33 @@ fun ProfileScreen(
         if (granted) viewModel.onSmsPermissionsGranted()
     }
 
+    // Platform-call exception: the destination Uri comes from the system file
+    // picker, so the screen owns the launcher and reports the pick back.
+    val exportLauncher = rememberLauncherForActivityResult(
+        ActivityResultContracts.CreateDocument("application/json"),
+    ) { uri -> uri?.let(viewModel::onExportUriSelected) }
+
+    LaunchedEffect(viewModel) {
+        viewModel.exportResult.collect { result ->
+            val messageRes = if (result == ExportResult.SUCCESS) {
+                R.string.profile_export_success
+            } else {
+                R.string.profile_export_error
+            }
+            Toast.makeText(context, context.getString(messageRes), Toast.LENGTH_SHORT).show()
+        }
+    }
+
     ProfileContent(
         state = state,
         onSignOut = viewModel::onSignOut,
         onAddCardClick = viewModel::onAddCardClick,
         onCardClick = viewModel::onCardClick,
         onManageRecurring = onManageRecurring,
+        onExportClick = {
+            val today = Clock.System.todayIn(TimeZone.currentSystemDefault())
+            exportLauncher.launch("tinto-export-$today.json")
+        },
         onSmsCaptureClick = {
             if (state.smsCaptureEnabled) {
                 showCaptureDisableConfirm = true
@@ -206,6 +231,7 @@ private fun ProfileContent(
     onAddCardClick: () -> Unit,
     onCardClick: (Card) -> Unit,
     onManageRecurring: () -> Unit,
+    onExportClick: () -> Unit,
     onSmsCaptureClick: () -> Unit,
     onNotificationCaptureClick: () -> Unit,
     modifier: Modifier = Modifier,
@@ -408,22 +434,19 @@ private fun ProfileContent(
             color = MaterialTheme.colorScheme.onBackground,
         )
         Spacer(Modifier.height(10.dp))
-        // Not clickable until the Storage Access Framework export exists: a row
-        // that ripples and does nothing reads as a broken app, so it carries the
-        // same "Próximamente" tag the Gmail permission row uses.
-        // TODO(sprint-N): real JSON export via the Storage Access Framework.
         Row(
             modifier = Modifier
                 .fillMaxWidth()
                 .clip(ButtonShape)
                 .background(MaterialTheme.colorScheme.surfaceVariant)
+                .clickable(onClick = onExportClick)
                 .padding(14.dp),
             verticalAlignment = Alignment.CenterVertically,
         ) {
             Icon(
                 imageVector = Icons.Outlined.FileDownload,
                 contentDescription = null,
-                tint = tinto.muted,
+                tint = tinto.gold,
                 modifier = Modifier.size(22.dp),
             )
             Spacer(Modifier.width(12.dp))
@@ -431,25 +454,12 @@ private fun ProfileContent(
                 Text(
                     text = stringResource(R.string.profile_export),
                     style = type.body.copy(fontWeight = FontWeight.Medium),
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    color = MaterialTheme.colorScheme.onBackground,
                 )
                 Spacer(Modifier.height(2.dp))
                 Text(
                     text = stringResource(R.string.profile_export_hint),
                     style = type.caption,
-                    color = tinto.muted,
-                )
-            }
-            Spacer(Modifier.width(12.dp))
-            Box(
-                modifier = Modifier
-                    .clip(PillShape)
-                    .background(MaterialTheme.colorScheme.background)
-                    .padding(horizontal = 10.dp, vertical = 3.dp),
-            ) {
-                Text(
-                    text = stringResource(R.string.profile_perm_soon),
-                    style = type.meta,
                     color = tinto.muted,
                 )
             }
@@ -462,8 +472,9 @@ private fun ProfileContent(
             color = MaterialTheme.colorScheme.onBackground,
         )
         Spacer(Modifier.height(4.dp))
-        // SMS (Sprint 3) and Nu notifications (Sprint 4) are live; Gmail
-        // stays a scaffolded seam for the sprint's phase 2.
+        // SMS (Sprint 3) and Nu notifications (Sprint 4) are live. Email
+        // capture (Gmail) was evaluated and intentionally skipped — the two
+        // live channels already cover every real money source.
         PermissionRow(
             icon = Icons.Outlined.NotificationsNone,
             label = stringResource(R.string.profile_perm_notifications),
@@ -489,8 +500,6 @@ private fun ProfileContent(
             statusEmphasis = state.smsCaptureEnabled,
             onClick = onSmsCaptureClick,
         )
-        HorizontalDivider(thickness = 0.5.dp, color = MaterialTheme.colorScheme.outline)
-        PermissionRow(Icons.Outlined.Email, stringResource(R.string.profile_perm_gmail))
 
         Spacer(Modifier.height(28.dp))
         Text(
