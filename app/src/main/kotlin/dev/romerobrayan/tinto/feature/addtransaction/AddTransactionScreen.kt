@@ -230,7 +230,7 @@ private fun AddTransactionContent(
                 state.cards.forEach { card ->
                     TintoSelectorPill(
                         label = "${card.bank} ${stringResource(R.string.card_mask, card.last4)}",
-                        selected = state.method == PaymentMethod.CARD && state.last4 == card.last4,
+                        selected = state.method == PaymentMethod.CARD && state.cardId == card.id,
                         onClick = { onCardSelected(card) },
                     )
                 }
@@ -251,12 +251,18 @@ private fun AddTransactionContent(
 
             if (state.method == PaymentMethod.CARD) {
                 Spacer(Modifier.height(12.dp))
-                Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                // FlowRow, not Row: past two cards the pills used to run off the
+                // screen edge with no wrap and no scroll, leaving the rest
+                // unreachable.
+                FlowRow(
+                    horizontalArrangement = Arrangement.spacedBy(8.dp),
+                    verticalArrangement = Arrangement.spacedBy(8.dp),
+                ) {
                     state.cards.forEach { card ->
                         TintoSelectorPill(
                             label = "${card.bank} ${stringResource(R.string.card_mask, card.last4)}",
-                            selected = state.last4 == card.last4,
-                            onClick = { onLast4Changed(card.last4) },
+                            selected = state.cardId == card.id,
+                            onClick = { onCardSelected(card) },
                         )
                     }
                 }

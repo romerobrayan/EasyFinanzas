@@ -13,6 +13,9 @@ data class CardFormUiState(
     val errors: Set<CardFormValidator.Error> = emptySet(),
 )
 
+/** One-shot result of an export attempt, surfaced once as a toast. */
+enum class ExportResult { SUCCESS, FAILURE }
+
 data class ProfileUiState(
     val userName: String = "",
     val userEmail: String = "",

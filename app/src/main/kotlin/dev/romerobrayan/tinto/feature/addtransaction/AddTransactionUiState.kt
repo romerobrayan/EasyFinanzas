@@ -20,6 +20,12 @@ data class AddTransactionUiState(
     val type: TransactionType = TransactionType.EXPENSE,
     val method: PaymentMethod = PaymentMethod.CASH,
     val last4: String = "",
+    /**
+     * Id of the registered card picked from the pills, or null when the last4
+     * was typed by hand. Selection is keyed on this — not on [last4] — so two
+     * cards sharing the same four digits stay distinguishable.
+     */
+    val cardId: String? = null,
     val categoryId: String? = null,
     val date: LocalDate = Clock.System.todayIn(TimeZone.currentSystemDefault()),
     val isDateToday: Boolean = true,

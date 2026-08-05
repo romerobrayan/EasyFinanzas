@@ -12,6 +12,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.sizeIn
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
@@ -186,12 +187,22 @@ private fun DashboardContent(
                 color = MaterialTheme.colorScheme.onBackground,
                 modifier = Modifier.weight(1f),
             )
-            Text(
-                text = stringResource(R.string.dashboard_see_all),
-                style = type.body.copy(fontWeight = FontWeight.Medium),
-                color = tinto.gold,
-                modifier = Modifier.clickable(onClick = onSeeAll),
-            )
+            // The tappable area is the box, not the glyph bounds: bare text runs
+            // ~20dp tall, well under the 48dp minimum touch target.
+            Box(
+                modifier = Modifier
+                    .clip(PillShape)
+                    .clickable(onClick = onSeeAll)
+                    .sizeIn(minWidth = 48.dp, minHeight = 48.dp)
+                    .padding(horizontal = 8.dp),
+                contentAlignment = Alignment.Center,
+            ) {
+                Text(
+                    text = stringResource(R.string.dashboard_see_all),
+                    style = type.body.copy(fontWeight = FontWeight.Medium),
+                    color = tinto.gold,
+                )
+            }
         }
 
         Spacer(Modifier.height(2.dp))
@@ -265,7 +276,7 @@ private fun SpeakSummaryControl(speech: SpeechUiState, onToggle: () -> Unit) {
 
     Box(
         modifier = Modifier
-            .size(40.dp)
+            .size(48.dp)
             .clip(PillShape)
             .background(MaterialTheme.colorScheme.surfaceVariant)
             .clickable(onClick = onToggle),
